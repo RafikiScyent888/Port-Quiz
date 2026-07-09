@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Core 1 :: Ports & Protocols Quiz</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0a0e14;
+    --panel:#10161f;
+    --panel-2:#161e29;
+    --line:#232d3a;
+    --amber:#ffb000;
+    --amber-dim:#8a6100;
+    --teal:#2dd4bf;
+    --red:#ff5f56;
+    --text:#dfe6ee;
+    --muted:#7c8a9c;
+    --mono:'JetBrains Mono', monospace;
+    --sans:'IBM Plex Sans', sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:
+      radial-gradient(circle at 15% 0%, #0f1826 0%, transparent 45%),
+      radial-gradient(circle at 85% 100%, #101a17 0%, transparent 45%),
+      var(--bg);
+    color:var(--text);
+    font-family:var(--sans);
+    min-height:100vh;
+    padding:32px 16px 60px;
+  }
+  .wrap{max-width:780px;margin:0 auto;}
+
+  /* header / terminal bar */
+  .termbar{
+    background:var(--panel-2);
+    border:1px solid var(--line);
+    border-bottom:none;
+    border-radius:10px 10px 0 0;
+    padding:10px 16px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+    font-family:var(--mono);
+    font-size:12px;
+    color:var(--muted);
+  }
+  .dot{width:10px;height:10px;border-radius:50%;}
+  .dot.r{background:#ff5f56;}
+  .dot.y{background:#ffbd2e;}
+  .dot.g{background:#27c93f;}
+  .termbar .path{margin-left:10px;}
+
+  .boot{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:0 0 10px 10px;
+    padding:22px 24px 26px;
+    font-family:var(--mono);
+  }
+  .boot .prompt{color:var(--teal);}
+  .boot .cmd{color:var(--amber);}
+  .boot h1{
+    font-size:22px;
+    margin:14px 0 4px;
+    color:#fff;
+    letter-spacing:0.5px;
+  }
+  .boot .sub{color:var(--muted);font-size:13px;margin-bottom:0;}
+  .cursor{display:inline-block;width:8px;height:16px;background:var(--amber);vertical-align:middle;animation:blink 1s steps(1) infinite;margin-left:2px;}
+  @keyframes blink{50%{opacity:0;}}
+
+  /* main card */
+  .card{
+    margin-top:18px;
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:26px;
+  }
+
+  /* progress */
+  .progress-row{display:flex;justify-content:space-between;align-items:baseline;font-family:var(--mono);font-size:12px;color:var(--muted);margin-bottom:8px;}
+  .progress-row .count{color:var(--amber);font-weight:700;}
+  .track{height:6px;background:var(--panel-2);border-radius:3px;overflow:hidden;border:1px solid var(--line);margin-bottom:26px;}
+  .fill{height:100%;background:linear-gradient(90deg,var(--amber-dim),var(--amber));width:0%;transition:width .35s ease;}
+
+  .qmeta{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+  .portstat{
+    font-family:var(--mono);
+    font-weight:800;
+    font-size:34px;
+    color:var(--amber);
+    line-height:1;
+    min-width:64px;
+  }
+  .qcat{
+    font-family:var(--mono);
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:1px;
+    color:var(--teal);
+    border:1px solid #1e4741;
+    background:#0e1f1c;
+    padding:3px 8px;
+    border-radius:4px;
+  }
+  .qtext{font-size:17px;line-height:1.5;color:#fff;margin:2px 0 20px;font-weight:500;}
+
+  .options{display:flex;flex-direction:column;gap:10px;}
+  .opt{
+    text-align:left;
+    background:var(--panel-2);
+    border:1px solid var(--line);
+    color:var(--text);
+    padding:13px 16px;
+    border-radius:8px;
+    font-family:var(--sans);
+    font-size:14.5px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    gap:12px;
+    transition:border-color .15s, background .15s, transform .1s;
+  }
+  .opt .tag{
+    font-family:var(--mono);
+    font-size:11px;
+    color:var(--muted);
+    border:1px solid var(--line);
+    border-radius:4px;
+    padding:1px 6px;
+    min-width:18px;
+    text-align:center;
+  }
+  .opt:hover:not(.locked){border-color:var(--amber-dim);background:#191f29;}
+  .opt:active:not(.locked){transform:scale(0.99);}
+  .opt.correct{border-color:var(--teal);background:#0e1f1c;}
+  .opt.correct .tag{color:var(--teal);border-color:var(--teal);}
+  .opt.incorrect{border-color:var(--red);background:#241313;}
+  .opt.incorrect .tag{color:var(--red);border-color:var(--red);}
+  .opt.locked{cursor:default;}
+
+  .feedback{
+    margin-top:16px;
+    font-family:var(--mono);
+    font-size:12.5px;
+    color:var(--muted);
+    border-left:2px solid var(--line);
+    padding:8px 0 8px 12px;
+    min-height:18px;
+    display:none;
+  }
+  .feedback.show{display:block;}
+  .feedback b{color:var(--teal);}
+
+  .nextrow{margin-top:18px;display:flex;justify-content:flex-end;}
+  .btn{
+    font-family:var(--mono);
+    font-size:13px;
+    background:var(--amber);
+    color:#1a1200;
+    border:none;
+    padding:10px 18px;
+    border-radius:6px;
+    font-weight:700;
+    cursor:pointer;
+    letter-spacing:0.3px;
+    display:none;
+  }
+  .btn.show{display:inline-block;}
+  .btn:hover{filter:brightness(1.08);}
+
+  /* results */
+  .results{display:none;}
+  .results.show{display:block;}
+  .results h2{
+    font-family:var(--mono);
+    font-size:14px;
+    color:var(--muted);
+    text-transform:uppercase;
+    letter-spacing:1.5px;
+    margin-bottom:4px;
+  }
+  .scorebig{
+    font-family:var(--mono);
+    font-size:56px;
+    font-weight:800;
+    color:var(--amber);
+    line-height:1;
+    margin:6px 0 4px;
+  }
+  .scoreline{font-family:var(--mono);font-size:13px;color:var(--muted);margin-bottom:20px;}
+  .grade{
+    display:inline-block;
+    font-family:var(--mono);
+    font-size:12px;
+    padding:4px 10px;
+    border-radius:5px;
+    margin-bottom:22px;
+    border:1px solid var(--line);
+  }
+  .grade.pass{color:var(--teal);border-color:#1e4741;background:#0e1f1c;}
+  .grade.fail{color:var(--red);border-color:#4a1f1f;background:#241313;}
+
+  .reviewlist{border-top:1px solid var(--line);margin-top:8px;padding-top:14px;}
+  .revitem{display:flex;gap:10px;padding:8px 0;font-size:13px;border-bottom:1px solid var(--line);}
+  .revitem:last-child{border-bottom:none;}
+  .revitem .ico{font-family:var(--mono);font-weight:700;min-width:16px;}
+  .revitem .ico.y{color:var(--teal);}
+  .revitem .ico.n{color:var(--red);}
+  .revitem .rq{color:var(--muted);}
+  .revitem .ra{color:var(--text);}
+
+  .retryrow{margin-top:22px;}
+
+  footer{
+    text-align:center;
+    font-family:var(--mono);
+    font-size:11px;
+    color:#3d4a5a;
+    margin-top:22px;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="termbar">
+    <div class="dot r"></div><div class="dot y"></div><div class="dot g"></div>
+    <span class="path">core1-quizzes/ports-protocols.html</span>
+  </div>
+  <div class="boot">
+    <span class="prompt">root@corenet</span>:~$ <span class="cmd">quiz --module ports-and-protocols</span><span class="cursor"></span>
+    <h1>Ports &amp; Protocols</h1>
+    <p class="sub">CompTIA A+ Core 1 (220-1201) &middot; 20 questions &middot; TCP/UDP, well-known ports, secure vs. insecure services</p>
+  </div>
+
+  <div class="card" id="quizCard">
+    <div class="progress-row">
+      <span>QUESTION <span class="count" id="qNum">1</span>/<span id="qTotal">20</span></span>
+      <span id="liveScore">SCORE: 0</span>
+    </div>
+    <div class="track"><div class="fill" id="fill"></div></div>
+
+    <div class="qmeta">
+      <div class="portstat" id="portStat">--</div>
+      <div class="qcat" id="qCat">CATEGORY</div>
+    </div>
+    <div class="qtext" id="qText">Loading question...</div>
+    <div class="options" id="options"></div>
+    <div class="feedback" id="feedback"></div>
+    <div class="nextrow"><button class="btn" id="nextBtn">NEXT &rarr;</button></div>
+  </div>
+
+  <div class="card results" id="results">
+    <h2>// diagnostic report</h2>
+    <div class="scorebig" id="finalScore">0/20</div>
+    <div class="scoreline" id="finalPct">0% correct</div>
+    <div class="grade" id="finalGrade">--</div>
+    <div class="reviewlist" id="reviewList"></div>
+    <div class="retryrow"><button class="btn show" id="retryBtn">RESTART QUIZ</button></div>
+  </div>
+
+  <footer>MyComputerCareer &middot; Cyber Warrior Program &middot; Core-1-quizzes</footer>
+</div>
+
+<script>
+const QUESTIONS = [
+  {port:"20/21", cat:"File Transfer", q:"Which protocol uses port 21 for control (auth, commands) and port 20 for the actual data transfer, and sends both unencrypted?", options:["FTP","SFTP","SSH","TFTP"], answer:0},
+  {port:"22", cat:"Remote Access", q:"Port 22 is used by which protocol suite, which replaced Telnet with encrypted remote access?", options:["RDP","Telnet","SSH","LDAP"], answer:2},
+  {port:"22", cat:"File Transfer", q:"Which secure file transfer method rides on top of SSH (port 22)?", options:["FTP","SFTP","HTTP","SMB"], answer:1},
+  {port:"23", cat:"Remote Access", q:"Telnet uses port 23 and is considered obsolete for one key reason. What is it?", options:["It's too slow","It sends everything unencrypted","It only works over UDP","It requires a VPN"], answer:1},
+  {port:"3389", cat:"Remote Access", q:"Which port and protocol provide full GUI remote desktop access to a Windows machine?", options:["22 / SSH","23 / Telnet","3389 / RDP","445 / SMB"], answer:2},
+  {port:"80", cat:"Web", q:"Unencrypted web traffic travels over which port?", options:["443","80","8080","53"], answer:1},
+  {port:"443", cat:"Web", q:"HTTPS secures web traffic using SSL/TLS over which port?", options:["80","21","443","110"], answer:2},
+  {port:"25", cat:"Email", q:"Which port and protocol are used to SEND outgoing email?", options:["110 / POP3","143 / IMAP","25 / SMTP","53 / DNS"], answer:2},
+  {port:"110", cat:"Email", q:"POP3 (port 110) downloads email to a client. What happens to the message on the server afterward?", options:["It stays synced","It gets forwarded","It is removed from the server","It is encrypted"], answer:2},
+  {port:"143", cat:"Email", q:"Unlike POP3, IMAP (port 143) keeps mail on the server and does what?", options:["Deletes it after 24 hours","Syncs it across devices","Only allows sending","Encrypts it automatically"], answer:1},
+  {port:"53", cat:"Network Services", q:"DNS, often called the 'phonebook of the internet,' runs on which port?", options:["67","53","389","445"], answer:1},
+  {port:"53", cat:"Network Services", q:"For DNS on port 53, which transport protocol is used for normal queries vs. zone transfers?", options:["UDP for queries, TCP for zone transfers","TCP for queries, UDP for zone transfers","UDP for both","TCP for both"], answer:0},
+  {port:"67/68", cat:"Network Services", q:"DHCP automatically assigns IP addresses. Which port does the DHCP server use, and which does the client use?", options:["Server 68 / Client 67","Server 67 / Client 68","Server 53 / Client 67","Server 67 / Client 53"], answer:1},
+  {port:"389", cat:"Network Services", q:"Port 389 is used by which protocol for directory services (e.g., Active Directory communication)?", options:["LDAP","LDAPS","SMB","DNS"], answer:0},
+  {port:"636", cat:"Network Services", q:"Which port is the encrypted version of LDAP?", options:["389","443","636","3389"], answer:2},
+  {port:"445", cat:"File Sharing", q:"Modern Windows file and printer sharing (SMB/CIFS) primarily uses which port today?", options:["139","137","445","138"], answer:2},
+  {port:"139", cat:"File Sharing", q:"Which legacy NetBIOS port uses TCP to establish a session between two machines for reliable file/print sharing?", options:["137","138","139","445"], answer:2},
+  {port:"--", cat:"Core Concept", q:"Which transport protocol is connection-oriented and reliable, but slower?", options:["UDP","TCP","ICMP","ARP"], answer:1},
+  {port:"--", cat:"Core Concept", q:"Which transport protocol is connectionless and faster, but less reliable?", options:["TCP","UDP","SSH","SMB"], answer:1},
+  {port:"--", cat:"Secure vs Insecure", q:"Which pair correctly matches an insecure protocol with its secure replacement?", options:["HTTP -> Telnet","FTP -> SFTP/FTPS","DNS -> DHCP","SMB -> RDP"], answer:1}
+];
+
+let current = 0;
+let score = 0;
+let locked = false;
+const userAnswers = [];
+
+const qNumEl = document.getElementById('qNum');
+const qTotalEl = document.getElementById('qTotal');
+const liveScoreEl = document.getElementById('liveScore');
+const fillEl = document.getElementById('fill');
+const portStatEl = document.getElementById('portStat');
+const qCatEl = document.getElementById('qCat');
+const qTextEl = document.getElementById('qText');
+const optionsEl = document.getElementById('options');
+const feedbackEl = document.getElementById('feedback');
+const nextBtn = document.getElementById('nextBtn');
+const quizCard = document.getElementById('quizCard');
+const resultsEl = document.getElementById('results');
+
+qTotalEl.textContent = QUESTIONS.length;
+
+function loadQuestion(){
+  locked = false;
+  const q = QUESTIONS[current];
+  qNumEl.textContent = current + 1;
+  liveScoreEl.textContent = "SCORE: " + score;
+  fillEl.style.width = ((current) / QUESTIONS.length * 100) + "%";
+  portStatEl.textContent = q.port;
+  qCatEl.textContent = q.cat;
+  qTextEl.textContent = q.q;
+  feedbackEl.classList.remove('show');
+  feedbackEl.textContent = "";
+  nextBtn.classList.remove('show');
+  nextBtn.textContent = current === QUESTIONS.length - 1 ? "SEE RESULTS →" : "NEXT →";
+
+  optionsEl.innerHTML = "";
+  const letters = ["A","B","C","D"];
+  q.options.forEach((opt, idx) => {
+    const div = document.createElement('button');
+    div.className = 'opt';
+    div.innerHTML = `<span class="tag">${letters[idx]}</span><span>${opt}</span>`;
+    div.addEventListener('click', () => selectAnswer(idx));
+    optionsEl.appendChild(div);
+  });
+}
+
+function selectAnswer(idx){
+  if(locked) return;
+  locked = true;
+  const q = QUESTIONS[current];
+  const opts = optionsEl.querySelectorAll('.opt');
+  opts.forEach(o => o.classList.add('locked'));
+
+  const correctIdx = q.answer;
+  const isCorrect = idx === correctIdx;
+  if(isCorrect) score++;
+
+  opts[correctIdx].classList.add('correct');
+  if(!isCorrect) opts[idx].classList.add('incorrect');
+
+  userAnswers.push({q: q.q, correct: isCorrect, correctText: q.options[correctIdx], picked: q.options[idx]});
+
+  feedbackEl.classList.add('show');
+  feedbackEl.innerHTML = isCorrect
+    ? `<b>Correct.</b> ${q.port !== "--" ? "Port " + q.port + " — " : ""}${q.cat}.`
+    : `<b>Correct answer:</b> ${q.options[correctIdx]}`;
+
+  liveScoreEl.textContent = "SCORE: " + score;
+  nextBtn.classList.add('show');
+}
+
+nextBtn.addEventListener('click', () => {
+  current++;
+  if(current < QUESTIONS.length){
+    loadQuestion();
+  } else {
+    finish();
+  }
+});
+
+function finish(){
+  fillEl.style.width = "100%";
+  quizCard.style.display = "none";
+  resultsEl.classList.add('show');
+
+  const pct = Math.round((score / QUESTIONS.length) * 100);
+  document.getElementById('finalScore').textContent = score + "/" + QUESTIONS.length;
+  document.getElementById('finalPct').textContent = pct + "% correct";
+
+  const gradeEl = document.getElementById('finalGrade');
+  if(pct >= 80){
+    gradeEl.textContent = "STATUS: PASS — exam ready";
+    gradeEl.className = "grade pass";
+  } else {
+    gradeEl.textContent = "STATUS: REVIEW NEEDED";
+    gradeEl.className = "grade fail";
+  }
+
+  const reviewList = document.getElementById('reviewList');
+  reviewList.innerHTML = "";
+  userAnswers.forEach((a, i) => {
+    const div = document.createElement('div');
+    div.className = 'revitem';
+    div.innerHTML = `<span class="ico ${a.correct ? 'y' : 'n'}">${a.correct ? '✓' : '✗'}</span>
+      <span><span class="rq">Q${i+1}.</span> <span class="ra">${a.q}</span>${a.correct ? '' : `<br><span class="rq">Correct: </span><span class="ra">${a.correctText}</span>`}</span>`;
+    reviewList.appendChild(div);
+  });
+}
+
+document.getElementById('retryBtn').addEventListener('click', () => {
+  current = 0;
+  score = 0;
+  userAnswers.length = 0;
+  quizCard.style.display = "block";
+  resultsEl.classList.remove('show');
+  loadQuestion();
+});
+
+loadQuestion();
+</script>
+</body>
+</html>
