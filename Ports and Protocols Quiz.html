@@ -1,0 +1,410 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>A+ Core 1 Ports &amp; Protocols Quiz</title>
+<style>
+:root{--bg:#071021;--card:#0b1220;--accent:#06b6d4;--accent2:#7c3aed;--muted:#94a3b8;--good:#16a34a;--bad:#ef4444;--line:rgba(255,255,255,0.08)}
+*{box-sizing:border-box}
+body{font-family:Inter,Segoe UI,Arial,sans-serif;background:linear-gradient(180deg,#04111a 0%,#071021 100%);color:#e6eef6;margin:0;padding:24px;min-height:100vh}
+.wrap{max-width:900px;margin:0 auto}
+h1{margin:0 0 4px 0;font-size:22px}
+h2{margin:0 0 12px 0;font-size:18px}
+.sub{color:var(--muted);font-size:14px;margin-bottom:20px}
+.card{background:linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));padding:22px;border-radius:14px;box-shadow:0 8px 32px rgba(2,6,23,0.6);border:1px solid var(--line);margin-bottom:16px}
+button{background:var(--accent);color:#042027;border:0;padding:11px 18px;border-radius:8px;font-weight:700;cursor:pointer;font-size:14px}
+button:hover{filter:brightness(1.08)}
+button:disabled{opacity:.4;cursor:not-allowed}
+button.ghost{background:transparent;color:var(--muted);border:1px solid var(--line)}
+button.ghost:hover{color:#e6eef6;border-color:var(--accent)}
+button.danger{background:transparent;color:var(--bad);border:1px solid var(--bad)}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.domain-list{display:flex;flex-direction:column;gap:10px;margin:14px 0}
+.domain-item{display:flex;align-items:center;gap:10px;background:#071022;padding:12px 14px;border-radius:10px;border:1px solid var(--line)}
+.domain-item label{flex:1;cursor:pointer;font-size:14px}
+.domain-count{color:var(--muted);font-size:13px}
+.domain-item input{width:18px;height:18px;accent-color:var(--accent);cursor:pointer}
+.count-row{display:flex;align-items:center;gap:14px;margin:16px 0}
+.count-row input[type=number]{width:90px;background:#071022;border:1px solid var(--line);color:#e6eef6;padding:9px 10px;border-radius:8px;font-size:15px}
+.count-row input[type=range]{flex:1;accent-color:var(--accent)}
+.note{color:var(--muted);font-size:13px;margin-top:6px}
+.resume-banner{background:rgba(124,58,237,0.12);border:1px solid rgba(124,58,237,0.4);padding:14px 16px;border-radius:10px;margin-bottom:18px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.progress{height:8px;background:rgba(255,255,255,0.06);border-radius:999px;overflow:hidden;margin:14px 0}
+.bar{height:8px;background:linear-gradient(90deg,var(--accent),var(--accent2));width:0%;transition:width .3s ease}
+.qmeta{display:flex;justify-content:space-between;color:var(--muted);font-size:13px;margin-bottom:10px}
+.qtext{font-weight:700;font-size:17px;line-height:1.5;margin-bottom:16px}
+.choices{display:flex;flex-direction:column;gap:10px}
+.choice{background:#071022;padding:13px 14px;border-radius:10px;border:1px solid var(--line);cursor:pointer;transition:transform .12s ease,border-color .12s ease;font-size:14.5px;line-height:1.4}
+.choice:hover:not(.locked){transform:translateY(-2px);border-color:var(--accent)}
+.choice.locked{cursor:default}
+.choice.selected-correct{border-color:var(--good);background:rgba(22,163,74,0.1)}
+.choice.selected-wrong{border-color:var(--bad);background:rgba(239,68,68,0.1)}
+.choice.reveal-correct{border-color:var(--good);background:rgba(22,163,74,0.06)}
+.tag{display:inline-block;font-size:11px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;padding:2px 8px;border-radius:999px;margin-right:8px}
+.tag.good{background:rgba(22,163,74,0.2);color:#4ade80}
+.tag.bad{background:rgba(239,68,68,0.2);color:#f87171}
+.explain-box{margin-top:8px;padding-top:8px;border-top:1px dashed var(--line);color:var(--muted);font-size:13.5px;line-height:1.5}
+.controls{display:flex;justify-content:space-between;align-items:center;margin-top:18px;gap:10px}
+.score-big{font-size:48px;font-weight:800;line-height:1}
+.score-sub{color:var(--muted);font-size:14px;margin-top:4px}
+.domain-score{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--line);font-size:14px}
+.domain-score:last-child{border-bottom:0}
+.review-item{padding:14px 0;border-bottom:1px solid var(--line)}
+.review-item:last-child{border-bottom:0}
+.review-q{font-weight:700;font-size:14.5px;margin-bottom:8px}
+.pill{display:inline-block;background:rgba(6,182,212,0.15);color:var(--accent);font-size:11px;padding:2px 8px;border-radius:999px;margin-bottom:8px}
+.hidden{display:none}
+a.silent{color:var(--accent);text-decoration:none}
+@media(max-width:640px){.score-big{font-size:38px}}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+
+<script id="question-data" type="application/json">
+[{"id": "q0001", "domain": "Core Concepts", "q": "Which transport protocol is connection-oriented and reliable, but slower?", "choices": ["TCP", "UDP", "ICMP", "ARP"], "correct": 0, "explain": "TCP establishes a connection and confirms delivery of data, which makes it reliable but adds overhead that slows it down.", "wrongExplain": ["", "UDP is connectionless and does not guarantee delivery, which makes it fast rather than reliable.", "ICMP is used for diagnostic messages like ping and traceroute, not for general reliable data delivery.", "ARP maps IP addresses to MAC addresses on a local network; it isn't a transport-layer delivery protocol."]}, {"id": "q0002", "domain": "Core Concepts", "q": "Which transport protocol is connectionless and prioritizes speed over guaranteed delivery?", "choices": ["UDP", "TCP", "SSH", "LDAP"], "correct": 0, "explain": "UDP sends data without establishing a connection or confirming delivery, making it fast but less reliable than TCP.", "wrongExplain": ["", "TCP is connection-oriented and reliable, which comes at the cost of speed, the opposite of what's described.", "SSH is an application-layer protocol for secure remote access, not the transport protocol being described.", "LDAP is an application-layer directory access protocol, not the transport protocol being described."]}, {"id": "q0003", "domain": "Core Concepts", "q": "DHCP and DNS name queries both favor speed over guaranteed delivery. Which transport protocol do they primarily rely on?", "choices": ["UDP", "TCP", "SSH", "SMB"], "correct": 0, "explain": "Both DHCP and routine DNS queries are lightweight, low-overhead exchanges, so they use UDP for speed.", "wrongExplain": ["", "TCP's connection setup and delivery guarantees add overhead that isn't needed for quick lease requests or name lookups.", "SSH is a separate application protocol for secure remote access and isn't used for DHCP or DNS queries.", "SMB is a file-sharing protocol and has nothing to do with DHCP or DNS."]}, {"id": "q0004", "domain": "File Transfer", "q": "In FTP, which port is the data port used to actually transfer file contents?", "choices": ["Port 20", "Port 21", "Port 22", "Port 23"], "correct": 0, "explain": "FTP uses port 20 as the data port, which is the channel that actually transfers file data between systems.", "wrongExplain": ["", "Port 21 is FTP's control port, used for the connection, authentication, and commands, not the file data itself.", "Port 22 belongs to SSH/SFTP/SCP, a separate and encrypted protocol, not standard FTP's data port.", "Port 23 belongs to Telnet, an unrelated remote-access protocol."]}, {"id": "q0005", "domain": "File Transfer", "q": "In FTP, which port handles the control connection (authentication and commands)?", "choices": ["Port 21", "Port 20", "Port 22", "Port 25"], "correct": 0, "explain": "FTP uses port 21 as the control port, handling the connection setup, authentication, and commands sent between client and server.", "wrongExplain": ["", "Port 20 is FTP's data port, used to transfer the actual file contents, not commands or authentication.", "Port 22 is used by SSH/SFTP/SCP, a separate encrypted protocol suite, not standard FTP.", "Port 25 is used by SMTP for sending email and is unrelated to FTP."]}, {"id": "q0006", "domain": "File Transfer", "q": "Standard FTP (ports 20/21) transmits data in what form?", "choices": ["Unencrypted (plaintext)", "Fully encrypted with TLS", "Encrypted only during login", "Encrypted only for the data channel"], "correct": 0, "explain": "Classic FTP sends everything, including credentials, in plaintext, which is why it's considered insecure.", "wrongExplain": ["", "FTP itself has no built-in encryption; FTPS adds TLS encryption, but that's a separate, secure variant.", "There is no partial encryption in standard FTP \u2014 the entire session, including login credentials, is sent in plaintext.", "The data channel (port 20) is just as unencrypted as the control channel (port 21) in standard FTP."]}, {"id": "q0007", "domain": "File Transfer", "q": "Which secure alternative to FTP operates over an SSH connection?", "choices": ["SFTP", "FTPS", "HTTPS", "LDAPS"], "correct": 0, "explain": "SFTP (SSH File Transfer Protocol) tunnels file transfer over SSH, using SSH's encryption for security.", "wrongExplain": ["", "FTPS is also a secure alternative to FTP, but it uses TLS rather than SSH.", "HTTPS secures web traffic (HTTP), not file transfer protocols like FTP.", "LDAPS secures directory service traffic (LDAP), not file transfers."]}, {"id": "q0008", "domain": "File Transfer", "q": "Which secure alternative to FTP uses TLS for encryption rather than SSH?", "choices": ["FTPS", "SFTP", "SSH", "Telnet"], "correct": 0, "explain": "FTPS (FTP Secure) adds a layer of TLS encryption on top of traditional FTP, rather than tunneling through SSH.", "wrongExplain": ["", "SFTP is the SSH-based secure alternative to FTP, using SSH's encryption rather than TLS.", "SSH is the underlying protocol that SFTP and SCP use for secure access; it is not itself called FTPS.", "Telnet is an unrelated, unencrypted remote command-line access protocol."]}, {"id": "q0009", "domain": "File Transfer", "q": "Which single port number is shared by SSH, SFTP, and SCP for secure file transfer and remote access?", "choices": ["Port 22", "Port 21", "Port 20", "Port 990"], "correct": 0, "explain": "SSH, and the SFTP and SCP protocols that ride on top of it, all use port 22.", "wrongExplain": ["", "Port 21 is the FTP control port, part of the unencrypted classic FTP protocol.", "Port 20 is the FTP data port, part of the unencrypted classic FTP protocol.", "Port 990 is commonly associated with FTPS, not with SSH/SFTP/SCP."]}, {"id": "q0010", "domain": "Remote Access", "q": "Which port does SSH use for secure command-line remote access?", "choices": ["Port 22", "Port 23", "Port 21", "Port 3389"], "correct": 0, "explain": "SSH operates on port 22, providing an encrypted replacement for older, insecure remote-access protocols.", "wrongExplain": ["", "Port 23 belongs to Telnet, the insecure protocol that SSH was designed to replace.", "Port 21 is the FTP control port and is unrelated to remote command-line access.", "Port 3389 belongs to RDP, which provides GUI remote desktop access rather than command-line access."]}, {"id": "q0011", "domain": "Remote Access", "q": "Which older remote-access protocol does SSH replace because it lacks encryption?", "choices": ["Telnet", "RDP", "FTP", "SMB"], "correct": 0, "explain": "Telnet sends all traffic, including credentials, in plaintext, so SSH was created as its encrypted replacement.", "wrongExplain": ["", "RDP provides GUI-based remote desktop access and is a separate protocol, not the one SSH was designed to replace.", "FTP is a file transfer protocol; its insecure nature is addressed by SFTP/FTPS, not SSH directly.", "SMB is a Windows file and printer sharing protocol, unrelated to command-line remote access."]}, {"id": "q0012", "domain": "Remote Access", "q": "Which port does Telnet use for remote command-line access?", "choices": ["Port 23", "Port 22", "Port 21", "Port 3389"], "correct": 0, "explain": "Telnet uses port 23. It's considered obsolete because it transmits everything, including credentials, without encryption.", "wrongExplain": ["", "Port 22 is used by SSH, the secure replacement for Telnet.", "Port 21 is the FTP control port, unrelated to Telnet.", "Port 3389 is used by RDP for GUI remote desktop access, not Telnet."]}, {"id": "q0013", "domain": "Remote Access", "q": "Why is Telnet considered obsolete for remote administration today?", "choices": ["It transmits data, including credentials, with no encryption", "It only works over UDP", "It cannot connect to Linux servers", "It requires a GUI"], "correct": 0, "explain": "Telnet sends all session data, including usernames and passwords, in plaintext, making it easy to intercept \u2014 this is why SSH replaced it.", "wrongExplain": ["", "Telnet is a TCP-based protocol, not UDP; its problem is lack of encryption, not its transport protocol.", "Telnet works fine with Linux (and most) servers; its issue is security, not compatibility.", "Telnet is a command-line (text-based) protocol, not a GUI one \u2014 that's part of why it's lightweight but insecure."]}, {"id": "q0014", "domain": "Remote Access", "q": "Which port is used by RDP (Remote Desktop Protocol)?", "choices": ["Port 3389", "Port 22", "Port 23", "Port 445"], "correct": 0, "explain": "RDP uses port 3389 to provide graphical, desktop-level remote access to a system.", "wrongExplain": ["", "Port 22 is used by SSH, which provides secure command-line access, not RDP's GUI access.", "Port 23 is used by Telnet, an insecure command-line protocol, not RDP.", "Port 445 is used by SMB/CIFS for Windows file and printer sharing, not remote desktop access."]}, {"id": "q0015", "domain": "Remote Access", "q": "What does RDP primarily provide?", "choices": ["Remote desktop (GUI) access to a system", "Command-line-only remote access", "Directory service authentication", "Email synchronization"], "correct": 0, "explain": "RDP (Remote Desktop Protocol) lets a user interact with a remote system's full graphical desktop, not just a command line.", "wrongExplain": ["", "Command-line-only remote access describes protocols like SSH or Telnet, not RDP.", "Directory service authentication describes LDAP/LDAPS, unrelated to RDP.", "Email synchronization describes IMAP, unrelated to RDP."]}, {"id": "q0016", "domain": "Remote Access", "q": "Which transport protocol(s) can RDP use?", "choices": ["Both TCP and UDP", "TCP only", "UDP only", "Neither \u2014 RDP uses ICMP"], "correct": 0, "explain": "RDP can use both TCP and UDP, with UDP often used to improve performance for graphical remote sessions.", "wrongExplain": ["", "While RDP commonly uses TCP, it isn't limited to TCP only \u2014 it can also use UDP.", "RDP isn't limited to UDP only \u2014 it can also use TCP, particularly for the initial connection.", "RDP does not rely on ICMP, which is used for diagnostic messages like ping, not remote desktop sessions."]}, {"id": "q0017", "domain": "Remote Access", "q": "Using the memory trick 'port number order equals security order' for ports 22 and 23, which pairing is correct?", "choices": ["22 = Secure (SSH), 23 = Old/insecure (Telnet)", "22 = Old (Telnet), 23 = Secure (SSH)", "22 = Web traffic, 23 = Email", "22 = File sharing, 23 = DNS"], "correct": 0, "explain": "A handy memory trick: port 22 (SSH) is secure, while port 23 (Telnet) is the old, unencrypted protocol it replaced.", "wrongExplain": ["", "This reverses the actual assignment \u2014 22 is SSH (secure), and 23 is Telnet (old/insecure), not the other way around.", "Ports 22 and 23 are SSH and Telnet respectively; web traffic uses 80/443 and email uses 25/110/143.", "Ports 22 and 23 are SSH and Telnet respectively; file sharing uses 445 and DNS uses 53."]}, {"id": "q0018", "domain": "Web", "q": "Which port does standard, unencrypted HTTP web traffic use?", "choices": ["Port 80", "Port 443", "Port 8080", "Port 21"], "correct": 0, "explain": "HTTP, the unencrypted version of web traffic, uses port 80.", "wrongExplain": ["", "Port 443 is used by HTTPS, the encrypted version of web traffic, not plain HTTP.", "Port 8080 is a common alternate HTTP port used by some web servers, but it's not the standard HTTP port covered here.", "Port 21 is the FTP control port and is unrelated to web traffic."]}, {"id": "q0019", "domain": "Web", "q": "Which port does HTTPS (secure web traffic) use?", "choices": ["Port 443", "Port 80", "Port 22", "Port 25"], "correct": 0, "explain": "HTTPS, which secures web traffic using SSL/TLS, uses port 443.", "wrongExplain": ["", "Port 80 is used by plain, unencrypted HTTP, not the secure HTTPS variant.", "Port 22 belongs to SSH, an unrelated remote-access protocol.", "Port 25 belongs to SMTP, used for sending email, not web traffic."]}, {"id": "q0020", "domain": "Web", "q": "HTTPS secures web traffic by layering which technology on top of HTTP?", "choices": ["SSL/TLS", "SSH", "IPsec", "Kerberos"], "correct": 0, "explain": "HTTPS wraps HTTP traffic in SSL/TLS encryption to keep it confidential and tamper-resistant.", "wrongExplain": ["", "SSH secures remote command-line/file-transfer sessions (ports 22-based protocols), not web traffic via HTTPS.", "IPsec is used to secure IP traffic, often for VPNs, but it isn't what specifically makes HTTPS secure.", "Kerberos is an authentication protocol used in Windows domains, not the encryption layer behind HTTPS."]}, {"id": "q0021", "domain": "Web", "q": "Following the exam tip that pairs the secure and insecure versions of web traffic, which protocol is explicitly labeled 'not secure'?", "choices": ["HTTP", "HTTPS", "SMTP", "IMAP"], "correct": 0, "explain": "Port 80 carries unencrypted HTTP traffic, while port 443 carries the secure HTTPS equivalent.", "wrongExplain": ["", "HTTPS is the secure protocol, which pairs with port 443, not port 80.", "SMTP is an email protocol that uses port 25, unrelated to the HTTP/HTTPS port pair.", "IMAP is an email protocol that uses port 143, unrelated to the HTTP/HTTPS port pair."]}, {"id": "q0022", "domain": "Email", "q": "Which port and protocol are used to send outgoing email from a client or between mail servers?", "choices": ["Port 25, SMTP", "Port 110, POP3", "Port 143, IMAP", "Port 443, HTTPS"], "correct": 0, "explain": "SMTP, on port 25, is responsible for sending (relaying) outgoing mail.", "wrongExplain": ["", "POP3, on port 110, downloads incoming mail from a server rather than sending it.", "IMAP, on port 143, syncs mail with a server rather than sending it.", "HTTPS, on port 443, secures general web traffic and isn't an email-sending protocol."]}, {"id": "q0023", "domain": "Email", "q": "Which port does POP3 use to download email?", "choices": ["Port 110", "Port 25", "Port 143", "Port 993"], "correct": 0, "explain": "POP3 uses port 110 and downloads email to the client, typically removing it from the server afterward.", "wrongExplain": ["", "Port 25 is used by SMTP for sending mail, not for downloading it.", "Port 143 is used by IMAP, which syncs mail rather than simply downloading and removing it.", "Port 993 is commonly associated with secure IMAP (IMAPS), not standard POP3."]}, {"id": "q0024", "domain": "Email", "q": "A defining behavior of POP3 is that it typically does what to email after downloading it?", "choices": ["Removes it from the mail server", "Keeps it synced across all devices", "Encrypts it automatically", "Forwards it to another mailbox"], "correct": 0, "explain": "POP3 is designed to pull mail down to a single device, typically removing it from the server once downloaded.", "wrongExplain": ["", "Keeping mail synced across devices describes IMAP's behavior, not POP3's.", "POP3 doesn't automatically add encryption; that would require a secure variant or wrapping the connection in TLS/SSL.", "POP3 simply downloads mail to a client \u2014 it doesn't forward messages to another mailbox on its own."]}, {"id": "q0025", "domain": "Email", "q": "Which port does IMAP use to sync email with the server?", "choices": ["Port 143", "Port 110", "Port 25", "Port 3389"], "correct": 0, "explain": "IMAP uses port 143 and keeps email synchronized on the server, so it stays accessible from multiple devices.", "wrongExplain": ["", "Port 110 is used by POP3, which downloads and typically removes mail from the server rather than syncing it.", "Port 25 is used by SMTP for sending mail, not for syncing an inbox.", "Port 3389 is used by RDP for remote desktop access, unrelated to email."]}, {"id": "q0026", "domain": "Email", "q": "What is the key advantage of IMAP over POP3?", "choices": ["It keeps mail on the server, syncing across multiple devices", "It sends outgoing mail faster", "It uses a lower port number", "It requires no authentication"], "correct": 0, "explain": "Because IMAP keeps messages on the server, a user's inbox stays consistent whether checked from a phone, laptop, or webmail client.", "wrongExplain": ["", "Sending outgoing mail is handled by SMTP, not a distinguishing feature between IMAP and POP3.", "IMAP's port number (143) is actually higher than POP3's (110); the advantage isn't about the port number.", "Both IMAP and POP3 require authentication to access a mailbox; that isn't a distinguishing advantage."]}, {"id": "q0027", "domain": "Email", "q": "Using the memory tricks from the exam notes, which pairing is correct?", "choices": ["SMTP = Send, POP3 = Pull (download), IMAP = Internet sync", "SMTP = Sync, POP3 = Send, IMAP = Pull", "SMTP = Pull, POP3 = Sync, IMAP = Send", "SMTP = Internet sync, POP3 = Send, IMAP = Pull"], "correct": 0, "explain": "The memory tricks are SMTP = Send, POP3 = Pull (download), and IMAP = Internet sync \u2014 matching their actual roles.", "wrongExplain": ["", "This scrambles the associations \u2014 SMTP sends mail, it doesn't sync it, and POP3 pulls/downloads, it doesn't send.", "This scrambles the associations \u2014 SMTP is for sending, not pulling, and IMAP is for syncing, not sending.", "This scrambles the associations \u2014 SMTP sends mail rather than syncing, and POP3 pulls/downloads rather than sending."]}, {"id": "q0028", "domain": "Network Services", "q": "Which port does DNS use to resolve names to IP addresses?", "choices": ["Port 53", "Port 67", "Port 389", "Port 445"], "correct": 0, "explain": "DNS operates on port 53, often described as the 'phonebook of the internet' because it maps domain names to IP addresses.", "wrongExplain": ["", "Port 67 is used by DHCP on the server side to assign IP addresses, not to resolve names.", "Port 389 is used by LDAP for directory services, not name resolution.", "Port 445 is used by SMB/CIFS for file and printer sharing, not name resolution."]}, {"id": "q0029", "domain": "Network Services", "q": "For DNS, when is TCP typically used instead of UDP?", "choices": ["For zone transfers between DNS servers", "For every single DNS query", "Only when DHCP is unavailable", "Never \u2014 DNS always uses UDP"], "correct": 0, "explain": "Routine DNS queries use UDP for speed, but larger transfers like zone transfers between DNS servers use TCP for reliability.", "wrongExplain": ["", "Ordinary DNS queries use UDP, not TCP, for speed; TCP is reserved for larger transfers like zone transfers.", "DNS's choice of TCP vs UDP has nothing to do with DHCP availability.", "DNS does use TCP in specific cases, such as zone transfers, even though most queries use UDP."]}, {"id": "q0030", "domain": "Network Services", "q": "DNS is commonly nicknamed which of the following in exam tips?", "choices": ["The 'phonebook of the internet'", "The 'automatic IP assigner'", "The 'secure directory service'", "The 'file-sharing standard'"], "correct": 0, "explain": "DNS translates human-friendly domain names into IP addresses, similar to how a phonebook maps names to numbers.", "wrongExplain": ["", "'Automatic IP assignment' describes DHCP's role, not DNS's.", "'Secure directory service' describes LDAPS, not DNS.", "'File-sharing standard' describes SMB/CIFS, not DNS."]}, {"id": "q0031", "domain": "Network Services", "q": "Which port does the DHCP server use to respond to clients and assign IP addresses?", "choices": ["Port 67", "Port 68", "Port 53", "Port 389"], "correct": 0, "explain": "DHCP servers listen and respond on port 67 (UDP) when assigning IP addresses to clients.", "wrongExplain": ["", "Port 68 is the DHCP client-side port, used by devices requesting an address, not by the server.", "Port 53 is used by DNS for name resolution, not IP address assignment.", "Port 389 is used by LDAP for directory services, not DHCP."]}, {"id": "q0032", "domain": "Network Services", "q": "Which port does a DHCP client use when requesting an IP address?", "choices": ["Port 68", "Port 67", "Port 53", "Port 445"], "correct": 0, "explain": "DHCP clients use port 68 (UDP) to send requests and receive address assignments from a DHCP server.", "wrongExplain": ["", "Port 67 is the DHCP server-side port, used to respond to and assign addresses, not the client-side request port.", "Port 53 is used by DNS for name resolution, unrelated to DHCP address requests.", "Port 445 is used by SMB/CIFS for file sharing, unrelated to DHCP."]}, {"id": "q0033", "domain": "Network Services", "q": "What transport protocol does DHCP use for both its server and client ports?", "choices": ["UDP", "TCP", "SSH", "ICMP"], "correct": 0, "explain": "DHCP relies on UDP (ports 67 and 68) for its lightweight, connectionless address-assignment exchanges.", "wrongExplain": ["", "TCP's connection setup and delivery guarantees add unnecessary overhead for DHCP's simple lease broadcasts.", "SSH is an unrelated protocol used for secure remote access, not IP address assignment.", "ICMP is used for diagnostic messages like ping, not for assigning IP addresses."]}, {"id": "q0034", "domain": "Network Services", "q": "Which port does LDAP use for directory services, such as Active Directory communication?", "choices": ["Port 389", "Port 636", "Port 53", "Port 143"], "correct": 0, "explain": "LDAP uses port 389 for directory service queries, including communication with Active Directory.", "wrongExplain": ["", "Port 636 is used by LDAPS, the encrypted version of LDAP, not standard LDAP.", "Port 53 is used by DNS for name resolution, unrelated to directory services.", "Port 143 is used by IMAP for email syncing, unrelated to directory services."]}, {"id": "q0035", "domain": "Network Services", "q": "Which port is used by LDAPS, the encrypted version of LDAP?", "choices": ["Port 636", "Port 389", "Port 443", "Port 22"], "correct": 0, "explain": "LDAPS, which encrypts directory service traffic, uses port 636.", "wrongExplain": ["", "Port 389 is used by standard, unencrypted LDAP, not the secure LDAPS variant.", "Port 443 is used by HTTPS for secure web traffic, not directory services.", "Port 22 is used by SSH for secure remote access, unrelated to directory services."]}, {"id": "q0036", "domain": "Windows Networking & File Sharing", "q": "Which legacy NetBIOS port handles name resolution over UDP?", "choices": ["Port 137", "Port 138", "Port 139", "Port 445"], "correct": 0, "explain": "Port 137 is the NetBIOS Name Service, used for legacy Windows name resolution over UDP.", "wrongExplain": ["", "Port 138 is the NetBIOS Datagram Service, handling connectionless datagrams, not name resolution.", "Port 139 is the NetBIOS Session Service (NBSS), which uses TCP to establish sessions, not name resolution over UDP.", "Port 445 is used by the modern SMB/CIFS protocol, not legacy NetBIOS name resolution."]}, {"id": "q0037", "domain": "Windows Networking & File Sharing", "q": "Which legacy NetBIOS port handles connectionless datagrams over UDP?", "choices": ["Port 138", "Port 137", "Port 139", "Port 445"], "correct": 0, "explain": "Port 138 is the NetBIOS Datagram Service, used for connectionless UDP-based communication.", "wrongExplain": ["", "Port 137 is the NetBIOS Name Service, used for name resolution, not connectionless datagrams.", "Port 139 is the NetBIOS Session Service, which uses TCP for session-based communication, not UDP datagrams.", "Port 445 belongs to the modern SMB/CIFS protocol, not legacy NetBIOS datagrams."]}, {"id": "q0038", "domain": "Windows Networking & File Sharing", "q": "Which NetBIOS port uses TCP to establish a session between two machines for reliable file sharing and printing?", "choices": ["Port 139 (NetBIOS Session Service)", "Port 137 (NetBIOS Name Service)", "Port 138 (NetBIOS Datagram Service)", "Port 445 (SMB/CIFS)"], "correct": 0, "explain": "Port 139, the NetBIOS Session Service (NBSS), uses TCP to establish a session for reliable communication like file sharing and printing.", "wrongExplain": ["", "Port 137 handles name resolution over UDP, not session establishment over TCP.", "Port 138 handles connectionless datagrams over UDP, not TCP-based sessions.", "Port 445 is the modern SMB/CIFS port, a separate, newer method of Windows file sharing."]}, {"id": "q0039", "domain": "Windows Networking & File Sharing", "q": "Which port is the modern standard for Windows file and printer sharing (SMB/CIFS)?", "choices": ["Port 445", "Port 137", "Port 138", "Port 139"], "correct": 0, "explain": "Port 445 is used by SMB/CIFS directly over TCP/IP and is the modern standard for Windows file and printer sharing.", "wrongExplain": ["", "Port 137 is a legacy NetBIOS port used for name resolution, not the modern SMB standard.", "Port 138 is a legacy NetBIOS port used for datagrams, not the modern SMB standard.", "Port 139 is a legacy NetBIOS session port; while related to file sharing, it's not the modern SMB/CIFS port (445)."]}, {"id": "q0040", "domain": "Windows Networking & File Sharing", "q": "What has largely replaced legacy NetBIOS-based file sharing in modern Windows networks?", "choices": ["SMB/CIFS over port 445", "LDAP over port 389", "RDP over port 3389", "DNS over port 53"], "correct": 0, "explain": "Modern Windows systems primarily use SMB/CIFS directly over port 445, rather than relying on legacy NetBIOS ports.", "wrongExplain": ["", "LDAP on port 389 is a directory service protocol, not a file-sharing replacement for NetBIOS.", "RDP on port 3389 provides remote desktop access, not file sharing.", "DNS on port 53 handles name resolution for the internet at large, not file sharing."]}, {"id": "q0041", "domain": "Secure vs Insecure", "q": "Which secure protocol/port pair replaces plaintext HTTP web traffic?", "choices": ["HTTPS on port 443", "SFTP on port 22", "LDAPS on port 636", "SSH on port 22"], "correct": 0, "explain": "HTTPS on port 443 is the encrypted counterpart to plain HTTP on port 80.", "wrongExplain": ["", "SFTP on port 22 is the secure counterpart to FTP, not to HTTP.", "LDAPS on port 636 is the secure counterpart to LDAP, not to HTTP.", "SSH on port 22 provides secure remote access; it isn't the direct secure counterpart to HTTP web traffic."]}, {"id": "q0042", "domain": "Secure vs Insecure", "q": "Which secure protocols can replace plaintext FTP for file transfer?", "choices": ["SFTP (over SSH) or FTPS (using TLS)", "HTTPS or SSH", "LDAPS or RDP", "Telnet or SMB"], "correct": 0, "explain": "SFTP tunnels file transfer through SSH, while FTPS layers TLS on top of FTP \u2014 both are secure alternatives to plaintext FTP.", "wrongExplain": ["", "HTTPS secures web traffic and SSH secures remote command-line access; neither is specifically FTP's secure replacement in this context, though SSH underlies SFTP.", "LDAPS secures directory services and RDP provides remote desktop access \u2014 neither is a file-transfer replacement for FTP.", "Telnet and SMB are unrelated protocols; Telnet is an insecure remote-access protocol and SMB is for file sharing, not FTP replacement."]}, {"id": "q0043", "domain": "Secure vs Insecure", "q": "Which secure protocol/port pair replaces plaintext LDAP directory traffic?", "choices": ["LDAPS on port 636", "HTTPS on port 443", "SFTP on port 22", "DNS on port 53"], "correct": 0, "explain": "LDAPS on port 636 encrypts directory service traffic that would otherwise be sent in plaintext over LDAP's port 389.", "wrongExplain": ["", "HTTPS on port 443 secures web traffic, not directory service traffic.", "SFTP on port 22 secures file transfers, not directory service traffic.", "DNS on port 53 resolves names to IP addresses and has no secure/insecure pairing described here."]}, {"id": "q0044", "domain": "Secure vs Insecure", "q": "According to the final exam tips, which of these is NOT one of the 'not secure -> secure' protocol pairs to memorize?", "choices": ["Telnet -> SSH", "HTTP -> HTTPS", "FTP -> SFTP/FTPS", "LDAP -> LDAPS"], "correct": 0, "explain": "The listed 'not secure -> secure' pairs are HTTP->HTTPS, FTP->SFTP/FTPS, and LDAP->LDAPS. Telnet->SSH is a true security upgrade too, but it isn't in that specific table of pairs.", "wrongExplain": ["", "HTTP -> HTTPS is explicitly listed as one of the not-secure-to-secure pairs to memorize.", "FTP -> SFTP/FTPS is explicitly listed as one of the not-secure-to-secure pairs to memorize.", "LDAP -> LDAPS is explicitly listed as one of the not-secure-to-secure pairs to memorize."]}, {"id": "q0045", "domain": "Remote Access", "q": "A technician needs to securely copy a file to a remote Linux server directly from the command line. Which port is most likely in use?", "choices": ["Port 22 (SCP/SFTP over SSH)", "Port 21 (FTP control)", "Port 3389 (RDP)", "Port 445 (SMB)"], "correct": 0, "explain": "SCP and SFTP both ride on top of SSH, using port 22 to securely copy files from the command line.", "wrongExplain": ["", "Port 21 is used by plaintext FTP, which is not secure and wouldn't be the choice for a secure command-line copy.", "Port 3389 is used by RDP for graphical remote desktop access, not command-line file copying.", "Port 445 is used by SMB for Windows file sharing, not typically for secure command-line copies to a Linux server."]}, {"id": "q0046", "domain": "Email", "q": "A user's email client is configured for IMAP and shows the same messages whether they check email on their phone or laptop. What port is this client most likely using?", "choices": ["Port 143", "Port 110", "Port 25", "Port 443"], "correct": 0, "explain": "IMAP, on port 143, keeps mail synchronized on the server, which is why the same messages appear across multiple devices.", "wrongExplain": ["", "Port 110 is used by POP3, which downloads and typically removes mail from the server, so it wouldn't keep messages synced across devices.", "Port 25 is used by SMTP for sending outgoing mail, not for reading synced messages.", "Port 443 is used by HTTPS for general secure web traffic, not specifically for the IMAP protocol described."]}, {"id": "q0047", "domain": "Network Services", "q": "An administrator wants to secure Active Directory directory-service traffic so it's encrypted in transit. Which port should be used instead of the default?", "choices": ["Port 636 (LDAPS)", "Port 389 (LDAP)", "Port 53 (DNS)", "Port 3389 (RDP)"], "correct": 0, "explain": "Switching from port 389 (plain LDAP) to port 636 (LDAPS) encrypts the directory-service traffic.", "wrongExplain": ["", "Port 389 is the default, unencrypted LDAP port \u2014 exactly what needs to be replaced to secure the traffic.", "Port 53 handles DNS name resolution, unrelated to securing directory-service traffic.", "Port 3389 is used by RDP for remote desktop access, unrelated to directory services."]}, {"id": "q0048", "domain": "Network Services", "q": "A packet capture shows a server responding to broadcast requests from multiple hosts on the network, handing out IP address leases over UDP. What is most likely happening?", "choices": ["A DHCP server is assigning IP addresses to clients", "A DNS server is resolving domain names", "An LDAP server is authenticating users", "A file server is sharing files over SMB"], "correct": 0, "explain": "Port 67 (UDP) is the DHCP server-side port used when responding to clients and assigning IP addresses.", "wrongExplain": ["", "DNS name resolution primarily uses port 53, not port 67.", "LDAP authentication traffic uses port 389 (or 636 for LDAPS), not port 67.", "SMB file sharing uses port 445, not port 67."]}, {"id": "q0049", "domain": "Web", "q": "A user is completing checkout on an e-commerce site and the browser shows a padlock icon in the address bar. Which port is most likely handling this connection?", "choices": ["Port 443", "Port 80", "Port 21", "Port 143"], "correct": 0, "explain": "The padlock icon indicates an encrypted HTTPS connection, which uses port 443.", "wrongExplain": ["", "Port 80 handles plain, unencrypted HTTP traffic and wouldn't show the padlock/secure indicator.", "Port 21 is the FTP control port, unrelated to web browsing.", "Port 143 is used by IMAP for email, unrelated to secure web checkout traffic."]}, {"id": "q0050", "domain": "Remote Access", "q": "An old network switch can only be managed through a legacy remote command-line protocol that transmits the admin password in plaintext. Which port is this device most likely using?", "choices": ["Port 23 (Telnet)", "Port 22 (SSH)", "Port 3389 (RDP)", "Port 443 (HTTPS)"], "correct": 0, "explain": "Telnet, on port 23, sends all data including passwords in plaintext, which matches the scenario described.", "wrongExplain": ["", "Port 22 (SSH) encrypts remote command-line sessions, so it wouldn't transmit the password in plaintext.", "Port 3389 (RDP) provides encrypted graphical remote desktop access, not the plaintext command-line access described.", "Port 443 (HTTPS) is used for secure web traffic, not command-line device management."]}, {"id": "q0051", "domain": "Windows Networking & File Sharing", "q": "A help desk technician confirms that a Windows 11 workstation can browse shared folders on a modern file server. Which port is most likely allowed through the firewall for this to work?", "choices": ["Port 445", "Port 137", "Port 21", "Port 3389"], "correct": 0, "explain": "Modern Windows file sharing uses SMB/CIFS over port 445, which must be open for browsing shared folders.", "wrongExplain": ["", "Port 137 is a legacy NetBIOS name-resolution port; modern SMB primarily relies on port 445 rather than this legacy port.", "Port 21 is the FTP control port and is unrelated to Windows file sharing.", "Port 3389 is used for RDP remote desktop access, not file sharing."]}, {"id": "q0052", "domain": "File Transfer", "q": "A company retires its old plaintext FTP server and replaces it with a solution that tunnels file transfer securely through SSH. What is this replacement called?", "choices": ["SFTP", "FTPS", "TFTP", "HTTP"], "correct": 0, "explain": "SFTP (SSH File Transfer Protocol) provides secure file transfer by tunneling through an SSH connection.", "wrongExplain": ["", "FTPS is also a secure alternative to FTP, but it uses TLS rather than tunneling through SSH.", "TFTP (Trivial File Transfer Protocol) is an even more basic, unencrypted protocol, not a secure SSH-based one.", "HTTP is a web protocol, not a file-transfer replacement for FTP."]}]
+</script>
+
+<script>
+const QUESTION_BANK = JSON.parse(document.getElementById('question-data').textContent);
+const DOMAINS = ["Core Concepts", "File Transfer", "Remote Access", "Web", "Email", "Network Services", "Windows Networking & File Sharing", "Secure vs Insecure"];
+const MIN_Q = 10, MAX_Q = 52;
+const STORAGE_KEY = "ports_protocols_quiz_session_v1";
+
+const app = document.getElementById('app');
+
+function domainCounts(){
+  const c = {};
+  DOMAINS.forEach(d => c[d] = 0);
+  QUESTION_BANK.forEach(q => c[q.domain]++);
+  return c;
+}
+
+function poolForDomains(selected){
+  return QUESTION_BANK.filter(q => selected.includes(q.domain));
+}
+
+function shuffle(arr){
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a;
+}
+
+function loadSession(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(!raw) return null;
+    const s = JSON.parse(raw);
+    if(s && s.v === 1) return s;
+  }catch(e){}
+  return null;
+}
+function saveSession(s){
+  s.updatedAt = new Date().toISOString();
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(s));
+}
+function clearSession(){
+  localStorage.removeItem(STORAGE_KEY);
+}
+
+function questionById(id){
+  return QUESTION_BANK.find(q => q.id === id);
+}
+
+// ---------- Setup screen ----------
+function renderSetup(){
+  const counts = domainCounts();
+  const existing = loadSession();
+  const selected = new Set(DOMAINS);
+  let countVal = Math.min(20, QUESTION_BANK.length);
+
+  function currentPool(){
+    return poolForDomains(Array.from(selected));
+  }
+
+  function draw(){
+    const pool = currentPool();
+    const available = pool.length;
+    const effMax = Math.max(1, Math.min(MAX_Q, available));
+    const effMin = Math.min(MIN_Q, effMax);
+    if(countVal > effMax) countVal = effMax;
+    if(countVal < effMin) countVal = effMin;
+
+    app.innerHTML = `
+      <h1>A+ Core 1 Ports &amp; Protocols Quiz</h1>
+      <div class="sub">${QUESTION_BANK.length} questions covering TCP/UDP, file transfer, remote access, web, email, network services, and Windows file-sharing ports. Pick your categories and question count to begin.</div>
+      ${existing && !existing.finished ? `
+        <div class="resume-banner">
+          <div><strong>Quiz in progress</strong> &mdash; ${existing.answers.filter(a=>a!==null).length} of ${existing.order.length} answered.</div>
+          <div class="row">
+            <button id="resumeBtn">Resume Quiz</button>
+            <button id="discardBtn" class="danger">Discard</button>
+          </div>
+        </div>` : ``}
+      <div class="card">
+        <h2>Quick Quiz</h2>
+        <div class="sub" style="margin-bottom:14px">A short, no-setup quiz pulling randomly from all categories.</div>
+        <div class="row">
+          <button id="quick10Btn" class="ghost">10 Questions</button>
+          <button id="quick20Btn" class="ghost">20 Questions</button>
+        </div>
+      </div>
+      <div class="card">
+        <h2>1. Choose categories</h2>
+        <div class="domain-list" id="domainList"></div>
+        <h2 style="margin-top:22px">2. Number of questions</h2>
+        <div class="count-row">
+          <input type="range" id="countSlider" min="${effMin}" max="${effMax}" value="${countVal}" ${effMax<=effMin?'disabled':''}/>
+          <input type="number" id="countNum" min="${effMin}" max="${effMax}" value="${countVal}" />
+        </div>
+        <div class="note">Choose between ${MIN_Q} and ${MAX_Q} questions. Currently <strong>${available}</strong> question${available===1?'':'s'} available for the selected categories${available < countVal ? ' — count has been capped.' : ''}.</div>
+        <div class="row" style="margin-top:20px">
+          <button id="startBtn" ${available===0?'disabled':''}>Start Quiz</button>
+        </div>
+      </div>
+    `;
+
+    const list = document.getElementById('domainList');
+    DOMAINS.forEach(d => {
+      const item = document.createElement('div');
+      item.className = 'domain-item';
+      const id = 'dom_' + d.replace(/\W+/g,'_');
+      item.innerHTML = `<input type="checkbox" id="${id}" ${selected.has(d)?'checked':''}/>
+        <label for="${id}">${d}</label>
+        <span class="domain-count">${counts[d]} question${counts[d]===1?'':'s'}</span>`;
+      item.querySelector('input').addEventListener('change', e => {
+        if(e.target.checked) selected.add(d); else selected.delete(d);
+        if(selected.size === 0){ e.target.checked = true; selected.add(d); }
+        draw();
+      });
+      list.appendChild(item);
+    });
+
+    document.getElementById('quick10Btn').addEventListener('click', () => startQuiz(DOMAINS.slice(), 10));
+    document.getElementById('quick20Btn').addEventListener('click', () => startQuiz(DOMAINS.slice(), 20));
+
+    document.getElementById('countSlider').addEventListener('input', e => {
+      countVal = parseInt(e.target.value, 10);
+      document.getElementById('countNum').value = countVal;
+    });
+    document.getElementById('countNum').addEventListener('change', e => {
+      let v = parseInt(e.target.value, 10) || effMin;
+      v = Math.max(effMin, Math.min(effMax, v));
+      countVal = v;
+      draw();
+    });
+    document.getElementById('startBtn').addEventListener('click', () => {
+      startQuiz(Array.from(selected), countVal);
+    });
+    if(existing && !existing.finished){
+      document.getElementById('resumeBtn').addEventListener('click', () => renderQuiz(existing));
+      document.getElementById('discardBtn').addEventListener('click', () => { clearSession(); renderSetup(); });
+    }
+  }
+  draw();
+}
+
+function startQuiz(selectedDomains, count){
+  const pool = shuffle(poolForDomains(selectedDomains)).slice(0, count);
+  const order = pool.map(q => ({ id: q.id, displayOrder: shuffle([0,1,2,3]) }));
+  const session = {
+    v: 1,
+    domains: selectedDomains,
+    order: order,
+    answers: order.map(() => null),
+    current: 0,
+    finished: false,
+    startedAt: new Date().toISOString()
+  };
+  saveSession(session);
+  renderQuiz(session);
+}
+
+// ---------- Quiz screen ----------
+function renderQuiz(session){
+  const total = session.order.length;
+  const idx = session.current;
+  const entry = session.order[idx];
+  const q = questionById(entry.id);
+  const answeredIdx = session.answers[idx]; // display-position index, or null
+
+  const answeredCount = session.answers.filter(a=>a!==null).length;
+  const pct = Math.round((idx / total) * 100);
+
+  app.innerHTML = `
+    <h1>A+ Core 1 Ports &amp; Protocols Quiz</h1>
+    <div class="qmeta">
+      <span>Question ${idx+1} of ${total} &middot; ${q.domain}</span>
+      <span>${answeredCount} answered</span>
+    </div>
+    <div class="progress"><div class="bar" style="width:${pct}%"></div></div>
+    <div class="card">
+      <div class="qtext">${escapeHtml(q.q)}</div>
+      <div class="choices" id="choicesWrap"></div>
+      <div id="feedbackWrap"></div>
+      <div class="controls">
+        <button class="ghost" id="pauseBtn">Pause &amp; Save</button>
+        <div class="row">
+          <button class="ghost" id="prevBtn" ${idx===0?'disabled':''}>&#9664; Prev</button>
+          <button id="nextBtn" disabled>${idx===total-1 ? 'Finish Quiz' : 'Next ▶'}</button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  const choicesWrap = document.getElementById('choicesWrap');
+  entry.displayOrder.forEach((origIdx, pos) => {
+    const div = document.createElement('div');
+    div.className = 'choice';
+    div.innerHTML = `<strong>${String.fromCharCode(65+pos)}.</strong> ${escapeHtml(q.choices[origIdx])}`;
+    div.addEventListener('click', () => {
+      if(session.answers[idx] !== null) return; // already locked
+      session.answers[idx] = pos;
+      saveSession(session);
+      renderQuiz(session);
+    });
+    choicesWrap.appendChild(div);
+  });
+
+  if(answeredIdx !== null){
+    lockChoices(session, entry, q, answeredIdx);
+    document.getElementById('nextBtn').disabled = false;
+  }
+
+  document.getElementById('prevBtn').addEventListener('click', () => {
+    session.current = Math.max(0, idx - 1);
+    saveSession(session);
+    renderQuiz(session);
+  });
+  document.getElementById('nextBtn').addEventListener('click', () => {
+    if(idx === total - 1){
+      session.finished = true;
+      saveSession(session);
+      renderResults(session);
+    } else {
+      session.current = idx + 1;
+      saveSession(session);
+      renderQuiz(session);
+    }
+  });
+  document.getElementById('pauseBtn').addEventListener('click', () => {
+    saveSession(session);
+    renderSetup();
+  });
+}
+
+function lockChoices(session, entry, q, answeredPos){
+  const choicesWrap = document.getElementById('choicesWrap');
+  const correctPos = entry.displayOrder.indexOf(q.correct);
+  const chosenOrigIdx = entry.displayOrder[answeredPos];
+  const wasCorrect = chosenOrigIdx === q.correct;
+
+  Array.from(choicesWrap.children).forEach((div, pos) => {
+    div.classList.add('locked');
+    if(pos === answeredPos && pos === correctPos){
+      div.classList.add('selected-correct');
+    } else if(pos === answeredPos){
+      div.classList.add('selected-wrong');
+    } else if(pos === correctPos){
+      div.classList.add('reveal-correct');
+    }
+  });
+
+  const fb = document.getElementById('feedbackWrap');
+  let html = '';
+  if(wasCorrect){
+    html += `<div class="explain-box"><span class="tag good">Correct</span>${escapeHtml(q.explain)}</div>`;
+  } else {
+    html += `<div class="explain-box"><span class="tag bad">Your answer was wrong</span>${escapeHtml(q.wrongExplain[chosenOrigIdx])}</div>`;
+    html += `<div class="explain-box"><span class="tag good">Correct answer</span>${escapeHtml(q.choices[q.correct])} &mdash; ${escapeHtml(q.explain)}</div>`;
+  }
+  fb.innerHTML = html;
+}
+
+// ---------- Results screen ----------
+function renderResults(session){
+  const total = session.order.length;
+  let correctCount = 0;
+  const perDomain = {};
+  DOMAINS.forEach(d => perDomain[d] = {correct:0, total:0});
+  const missed = [];
+
+  session.order.forEach((entry, i) => {
+    const q = questionById(entry.id);
+    const answeredPos = session.answers[i];
+    const chosenOrigIdx = answeredPos === null ? null : entry.displayOrder[answeredPos];
+    const isCorrect = chosenOrigIdx === q.correct;
+    perDomain[q.domain].total++;
+    if(isCorrect){ correctCount++; perDomain[q.domain].correct++; }
+    else missed.push({q, chosenOrigIdx});
+  });
+
+  const answeredCount = session.answers.filter(a=>a!==null).length;
+  const score = answeredCount > 0 ? Math.round((correctCount / answeredCount) * 100) : 0;
+
+  app.innerHTML = `
+    <h1>Results</h1>
+    <div class="card" style="text-align:center">
+      <div class="score-big">${score}<span style="font-size:24px;color:var(--muted)"> / 100</span></div>
+      <div class="score-sub">${correctCount} correct out of ${answeredCount} answered (${total} selected)</div>
+    </div>
+    <div class="card">
+      <h2>By category</h2>
+      <div id="domainBreakdown"></div>
+    </div>
+    <div class="card">
+      <h2>Review missed questions (${missed.length})</h2>
+      <div id="missedList">${missed.length===0 ? '<div class="note">Perfect score on answered questions.</div>' : ''}</div>
+    </div>
+    <div class="row">
+      <button id="newQuizBtn">Start New Quiz</button>
+    </div>
+  `;
+
+  const db = document.getElementById('domainBreakdown');
+  DOMAINS.forEach(d => {
+    const s = perDomain[d];
+    if(s.total === 0) return;
+    const p = Math.round((s.correct/s.total)*100);
+    const row = document.createElement('div');
+    row.className = 'domain-score';
+    row.innerHTML = `<span>${d}</span><span>${s.correct}/${s.total} (${p}%)</span>`;
+    db.appendChild(row);
+  });
+
+  const ml = document.getElementById('missedList');
+  missed.forEach(({q, chosenOrigIdx}) => {
+    const div = document.createElement('div');
+    div.className = 'review-item';
+    let yourAnswerHtml = chosenOrigIdx === null
+      ? `<div class="explain-box"><span class="tag bad">Not answered</span></div>`
+      : `<div class="explain-box"><span class="tag bad">Your answer</span>${escapeHtml(q.choices[chosenOrigIdx])} &mdash; ${escapeHtml(q.wrongExplain[chosenOrigIdx])}</div>`;
+    div.innerHTML = `
+      <span class="pill">${q.domain}</span>
+      <div class="review-q">${escapeHtml(q.q)}</div>
+      ${yourAnswerHtml}
+      <div class="explain-box"><span class="tag good">Correct answer</span>${escapeHtml(q.choices[q.correct])} &mdash; ${escapeHtml(q.explain)}</div>
+    `;
+    ml.appendChild(div);
+  });
+
+  document.getElementById('newQuizBtn').addEventListener('click', () => {
+    clearSession();
+    renderSetup();
+  });
+}
+
+function escapeHtml(s){
+  const d = document.createElement('div');
+  d.textContent = s == null ? '' : String(s);
+  return d.innerHTML;
+}
+
+renderSetup();
+</script>
+</body>
+</html>
