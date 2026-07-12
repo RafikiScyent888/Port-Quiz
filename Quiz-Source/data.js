@@ -29,3 +29,4 @@ const PORT_DATA = [
   { port: "1433",       protocol: "MS SQL",               transport: "TCP",     use: "Database traffic" },
   { port: "5060/5061",  protocol: "SIP",                  transport: "TCP/UDP", use: "VoIP signaling (plain / TLS)" }
 ];
+ 
