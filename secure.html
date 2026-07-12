@@ -1,0 +1,363 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Secure Swap</title>
+<style>
+  :root{
+    --bg1:#1a0a33;--bg2:#3f1a7a;--bg3:#7c3aed;
+    --card:#2a1157;--line:rgba(255,255,255,0.16);
+    --text:#f3ecff;--muted:#c9b6f0;
+    --good:#2ecc71;--bad:#ff6b5e;--accent:#c4b5fd;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;min-height:100vh;font-family:"Segoe UI",Inter,Arial,sans-serif;color:var(--text);
+    background:linear-gradient(160deg,var(--bg1) 0%,var(--bg2) 55%,var(--bg3) 100%);
+    padding:24px 16px 60px;
+  }
+  .wrap{max-width:980px;margin:0 auto}
+  a.back{color:var(--muted);text-decoration:none;font-size:13.5px;font-weight:600}
+  a.back:hover{color:var(--text)}
+  h1{margin:6px 0 4px;font-size:clamp(24px,3.6vw,32px)}
+  .sub{color:var(--muted);font-size:14px;margin-bottom:18px;max-width:700px;line-height:1.55}
+  .card{
+    background:rgba(0,0,0,0.24);border:1px solid var(--line);border-radius:16px;
+    padding:20px;margin-bottom:18px;box-shadow:0 10px 26px rgba(0,0,0,0.3);
+  }
+  .howto{font-size:13.5px;line-height:1.7;color:var(--muted)}
+  .howto strong{color:var(--text)}
+  .howto ol{margin:8px 0 0;padding-left:20px}
+  .controls{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:16px}
+  button{
+    font-family:inherit;font-weight:700;font-size:13.5px;border:0;border-radius:999px;
+    padding:10px 18px;cursor:pointer;background:var(--accent);color:#22093f;
+  }
+  button:hover{filter:brightness(1.06)}
+  button.ghost{background:transparent;border:1px solid var(--line);color:var(--text)}
+  .stats{display:flex;gap:22px;flex-wrap:wrap;font-size:14px;color:var(--muted);margin-bottom:6px}
+  .stats b{color:var(--text)}
+  .board{
+    display:grid;grid-template-columns:1fr 1fr;gap:24px;
+  }
+  @media(max-width:640px){.board{grid-template-columns:1fr}}
+  .col h3{margin:0 0 10px;font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+  .tile-list{display:flex;flex-direction:column;gap:10px}
+  .tile{
+    text-align:left;background:var(--card);border:1px solid var(--line);border-radius:12px;
+    padding:13px 14px;color:var(--text);font-size:14px;line-height:1.4;cursor:pointer;
+    transition:transform .12s ease, border-color .12s ease, background .15s ease;
+  }
+  .tile:hover:not(.matched):not(:disabled){transform:translateX(3px);border-color:var(--accent)}
+  .tile.insecure{font-weight:800;font-size:16px}
+  .tile.insecure .tag-insecure{display:block;font-weight:700;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:#ffb3ab;margin-top:4px}
+  .tile.selected{border-color:var(--accent);background:#3d1a70;box-shadow:0 0 0 2px rgba(196,181,253,0.45)}
+  .tile.matched{opacity:.35;cursor:default;border-color:var(--good)}
+  .tile.wrong{border-color:var(--bad);background:#3d1a70;box-shadow:0 0 0 2px rgba(255,107,94,0.55);animation:shake .3s ease}
+  @keyframes shake{
+    0%,100%{transform:translateX(0)}
+    25%{transform:translateX(-4px)}
+    75%{transform:translateX(4px)}
+  }
+  .win{text-align:center;padding:30px 20px}
+  .win .score{font-size:40px;font-weight:800}
+  .win p{color:var(--muted)}
+  .hidden{display:none}
+  @media(max-width:480px){
+    body{padding:16px 10px 50px}
+    .card{padding:16px}
+    .tile{padding:11px 12px;font-size:13.5px}
+    .tile.insecure{font-size:15px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="index.html">&larr; Back to Game Hub</a>
+  <h1>🔒 Secure Swap</h1>
+  <div class="sub">Match every insecure, legacy protocol on the left with its encrypted replacement on the right &mdash; straight out of the Security+ secure-vs-insecure pairs list.</div>
+
+  <div class="card howto">
+    <strong>How to play</strong>
+    <ol>
+      <li>Click an <strong>insecure protocol</strong> card on the left to select it.</li>
+      <li>Then click the card on the right with its correct secure replacement (Port, Protocol, and Use).</li>
+      <li>A correct pair locks in green and stays visible; a wrong pair flashes red and unselects.</li>
+      <li>Match all 6 pairs with as few moves as possible, in the fastest time.</li>
+    </ol>
+  </div>
+
+  <div class="card hidden" id="resumeCard">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
+      <div id="resumeText" style="font-size:14px"></div>
+      <div style="display:flex;gap:10px">
+        <button id="resumeBtn">Resume Game</button>
+        <button class="ghost" id="discardBtn">Discard</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="controls">
+      <button class="ghost" id="pauseBtn">Pause &amp; Save</button>
+      <button id="newGameBtn" style="margin-left:auto">New Game</button>
+    </div>
+    <div class="stats">
+      <span>Matches: <b id="matchesStat">0</b>/<b id="totalStat">0</b></span>
+      <span>Moves: <b id="movesStat">0</b></span>
+      <span>Time: <b id="timeStat">0:00</b></span>
+    </div>
+  </div>
+
+  <div class="card" id="boardCard">
+    <div class="board">
+      <div class="col">
+        <h3>Insecure Protocol</h3>
+        <div class="tile-list" id="leftCol"></div>
+      </div>
+      <div class="col">
+        <h3>Secure Replacement</h3>
+        <div class="tile-list" id="rightCol"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card win hidden" id="winCard">
+    <div class="score" id="winScore"></div>
+    <p id="winSub"></p>
+    <button id="playAgainBtn">Play Again</button>
+  </div>
+
+  <p style="text-align:center;color:var(--muted);font-size:12px;margin-top:8px">For educational purposes only &mdash; not affiliated with or endorsed by CompTIA.</p>
+</div>
+
+<script src="data.js"></script>
+<script>
+const STORAGE_KEY = "portsecure_session_v1";
+// [insecure port, secure port] — the classic Security+ pairs, one clean 1:1 port match each.
+const PAIR_PORTS = [
+  ["23", "22"],
+  ["80", "443"],
+  ["25", "465"],
+  ["110", "995"],
+  ["143", "993"],
+  ["389", "636"]
+];
+
+let pairs = [];
+let leftOrder = [];
+let rightOrder = [];
+let selectedId = null;
+let matched = new Set();
+let moves = 0;
+let seconds = 0;
+let timerHandle = null;
+let started = false;
+
+function buildPairs(){
+  return PAIR_PORTS.map(([insP, secP], i) => {
+    const insecure = PORT_DATA.find(d => d.port === insP);
+    const secure = PORT_DATA.find(d => d.port === secP);
+    return {
+      id: i,
+      leftLabel: insecure.port,
+      leftProtocol: insecure.protocol,
+      rightLabel: `${secure.port} — ${secure.protocol} — ${secure.use}`
+    };
+  });
+}
+
+function saveSession(){
+  const state = {
+    v: 1, pairs, leftOrder, rightOrder,
+    matched: Array.from(matched), moves, seconds,
+    finished: matched.size === pairs.length
+  };
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+function loadSession(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(!raw) return null;
+    const s = JSON.parse(raw);
+    if(s && s.v === 1) return s;
+  }catch(e){}
+  return null;
+}
+function clearSession(){
+  localStorage.removeItem(STORAGE_KEY);
+}
+
+function shuffle(arr){
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]]=[a[j],a[i]];
+  }
+  return a;
+}
+
+function fmtTime(s){
+  const m = Math.floor(s/60), r = s%60;
+  return m + ":" + String(r).padStart(2,"0");
+}
+
+function startTimer(){
+  if(timerHandle) return;
+  timerHandle = setInterval(() => {
+    seconds++;
+    document.getElementById("timeStat").textContent = fmtTime(seconds);
+  }, 1000);
+}
+function stopTimer(){
+  clearInterval(timerHandle);
+  timerHandle = null;
+}
+
+function newGame(){
+  clearSession();
+  document.getElementById("resumeCard").classList.add("hidden");
+  pairs = buildPairs();
+  leftOrder = shuffle(pairs.map(p => p.id));
+  rightOrder = shuffle(pairs.map(p => p.id));
+  selectedId = null;
+  matched = new Set();
+  moves = 0;
+  seconds = 0;
+  started = false;
+  stopTimer();
+  document.getElementById("timeStat").textContent = "0:00";
+  document.getElementById("winCard").classList.add("hidden");
+  document.getElementById("boardCard").classList.remove("hidden");
+  render();
+  updateStats();
+}
+
+function render(){
+  const leftCol = document.getElementById("leftCol");
+  const rightCol = document.getElementById("rightCol");
+  leftCol.innerHTML = "";
+  rightCol.innerHTML = "";
+
+  leftOrder.map(id => pairs.find(p => p.id === id)).forEach(p => {
+    const btn = document.createElement("button");
+    btn.className = "tile insecure";
+    btn.innerHTML = `${p.leftLabel}<span class="tag-insecure">${p.leftProtocol}</span>`;
+    btn.disabled = matched.has(p.id);
+    if(matched.has(p.id)) btn.classList.add("matched");
+    if(selectedId === p.id) btn.classList.add("selected");
+    btn.addEventListener("click", () => onLeftClick(p.id));
+    leftCol.appendChild(btn);
+  });
+
+  rightOrder.map(id => pairs.find(p => p.id === id)).forEach(p => {
+    const btn = document.createElement("button");
+    btn.className = "tile";
+    btn.textContent = p.rightLabel;
+    btn.disabled = matched.has(p.id);
+    if(matched.has(p.id)) btn.classList.add("matched");
+    btn.addEventListener("click", () => onRightClick(p.id, btn));
+    rightCol.appendChild(btn);
+  });
+}
+
+function onLeftClick(id){
+  if(matched.has(id)) return;
+  if(!started){ started = true; startTimer(); }
+  selectedId = (selectedId === id) ? null : id;
+  render();
+}
+
+function onRightClick(id, el){
+  if(matched.has(id) || selectedId === null) return;
+  if(!started){ started = true; startTimer(); }
+  moves++;
+  if(id === selectedId){
+    matched.add(id);
+    selectedId = null;
+    render();
+    if(matched.size === pairs.length){
+      stopTimer();
+      showWin();
+    }
+  } else {
+    el.classList.add("wrong");
+    const leftBtn = Array.from(document.getElementById("leftCol").children)
+      .find(b => b.textContent.startsWith(pairs.find(p=>p.id===selectedId).leftLabel));
+    if(leftBtn) leftBtn.classList.add("wrong");
+    setTimeout(() => {
+      selectedId = null;
+      render();
+    }, 380);
+  }
+  updateStats();
+}
+
+function updateStats(){
+  document.getElementById("matchesStat").textContent = matched.size;
+  document.getElementById("totalStat").textContent = pairs.length;
+  document.getElementById("movesStat").textContent = moves;
+}
+
+function showWin(){
+  clearSession();
+  document.getElementById("boardCard").classList.add("hidden");
+  document.getElementById("winCard").classList.remove("hidden");
+  document.getElementById("winScore").textContent = fmtTime(seconds);
+  document.getElementById("winSub").textContent =
+    `All ${pairs.length} pairs matched in ${moves} move${moves===1?"":"s"}.`;
+}
+
+function pauseAndSave(){
+  stopTimer();
+  saveSession();
+  window.location.href = "index.html";
+}
+
+function showResumeBanner(s){
+  document.getElementById("boardCard").classList.add("hidden");
+  document.getElementById("winCard").classList.add("hidden");
+  const rc = document.getElementById("resumeCard");
+  rc.classList.remove("hidden");
+  document.getElementById("resumeText").innerHTML =
+    `<strong>Game in progress</strong> &mdash; ${s.matched.length}/${s.pairs.length} matched, ${s.moves} move${s.moves===1?"":"s"}, ${fmtTime(s.seconds)} elapsed.`;
+  document.getElementById("resumeBtn").onclick = () => restoreSession(s);
+  document.getElementById("discardBtn").onclick = () => {
+    clearSession();
+    rc.classList.add("hidden");
+    newGame();
+  };
+}
+
+function restoreSession(s){
+  pairs = s.pairs;
+  leftOrder = s.leftOrder;
+  rightOrder = s.rightOrder;
+  matched = new Set(s.matched);
+  moves = s.moves;
+  seconds = s.seconds;
+  selectedId = null;
+  started = true;
+  document.getElementById("resumeCard").classList.add("hidden");
+  document.getElementById("winCard").classList.add("hidden");
+  document.getElementById("boardCard").classList.remove("hidden");
+  document.getElementById("timeStat").textContent = fmtTime(seconds);
+  render();
+  updateStats();
+  startTimer();
+}
+
+document.getElementById("newGameBtn").addEventListener("click", newGame);
+document.getElementById("playAgainBtn").addEventListener("click", newGame);
+document.getElementById("pauseBtn").addEventListener("click", pauseAndSave);
+
+const existingSession = loadSession();
+if(existingSession && !existingSession.finished){
+  showResumeBanner(existingSession);
+} else {
+  newGame();
+}
+</script>
+</body>
+</html>
