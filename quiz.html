@@ -1,0 +1,337 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Port Test</title>
+<style>
+  :root{
+    --bg1:#031126;--bg2:#0d3b7a;--bg3:#1d6fd6;
+    --card:#0b2545;--line:rgba(255,255,255,0.16);
+    --text:#eaf2fb;--muted:#a9c6ea;
+    --good:#2ecc71;--bad:#ff6b5e;--accent:#5aa9e6;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;min-height:100vh;font-family:"Segoe UI",Inter,Arial,sans-serif;color:var(--text);
+    background:linear-gradient(160deg,var(--bg1) 0%,var(--bg2) 65%,var(--bg3) 120%);
+    padding:24px 16px 60px;
+  }
+  .wrap{max-width:760px;margin:0 auto}
+  a.back{color:var(--muted);text-decoration:none;font-size:13.5px;font-weight:600}
+  a.back:hover{color:var(--text)}
+  h1{margin:6px 0 4px;font-size:clamp(24px,3.6vw,32px)}
+  .sub{color:var(--muted);font-size:14px;margin-bottom:18px;max-width:700px;line-height:1.55}
+  .card{
+    background:rgba(0,0,0,0.24);border:1px solid var(--line);border-radius:16px;
+    padding:22px;margin-bottom:18px;box-shadow:0 10px 26px rgba(0,0,0,0.3);
+  }
+  .howto{font-size:13.5px;line-height:1.7;color:var(--muted)}
+  .howto strong{color:var(--text)}
+  .howto ol{margin:8px 0 0;padding-left:20px}
+  .controls{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:6px}
+  button{
+    font-family:inherit;font-weight:700;font-size:13.5px;border:0;border-radius:999px;
+    padding:10px 18px;cursor:pointer;background:var(--accent);color:#04213f;
+  }
+  button:hover{filter:brightness(1.06)}
+  button:disabled{opacity:.4;cursor:not-allowed}
+  button.ghost{background:transparent;border:1px solid var(--line);color:var(--text)}
+  button.size-btn.active{outline:2px solid var(--accent);outline-offset:2px}
+  .qmeta{display:flex;justify-content:space-between;color:var(--muted);font-size:13px;margin-bottom:10px}
+  .progress{height:8px;background:rgba(255,255,255,0.08);border-radius:999px;overflow:hidden;margin-bottom:16px}
+  .bar{height:8px;background:linear-gradient(90deg,var(--accent),#7ee0c9);width:0%;transition:width .3s ease}
+  .port-display{
+    text-align:center;padding:22px 10px 26px;
+  }
+  .port-display .label{color:var(--muted);font-size:13px;text-transform:uppercase;letter-spacing:.08em}
+  .port-display .num{font-size:52px;font-weight:800;color:var(--accent)}
+  .choices{display:flex;flex-direction:column;gap:10px}
+  .choice{
+    text-align:left;background:var(--card);border:1px solid var(--line);border-radius:12px;
+    padding:13px 14px;color:var(--text);font-size:14.5px;cursor:pointer;line-height:1.4;
+  }
+  .choice:hover:not(.locked){border-color:var(--accent)}
+  .choice.locked{cursor:default}
+  .choice.selected-correct{border-color:var(--good);background:rgba(46,204,113,0.15)}
+  .choice.selected-wrong{border-color:var(--bad);background:rgba(255,107,94,0.15)}
+  .choice.reveal-correct{border-color:var(--good);background:rgba(46,204,113,0.08)}
+  .feedback{margin-top:14px;padding-top:12px;border-top:1px dashed var(--line);font-size:13.5px;color:var(--muted);line-height:1.5}
+  .tag{display:inline-block;font-size:11px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;padding:2px 8px;border-radius:999px;margin-right:8px}
+  .tag.good{background:rgba(46,204,113,0.22);color:#7ee0c9}
+  .tag.bad{background:rgba(255,107,94,0.22);color:#ffb3ab}
+  .bottom-row{display:flex;justify-content:space-between;align-items:center;margin-top:18px;gap:10px}
+  .score-big{font-size:48px;font-weight:800;text-align:center}
+  .score-sub{color:var(--muted);text-align:center;font-size:14px;margin-top:4px}
+  .hidden{display:none}
+  @media(max-width:480px){
+    body{padding:16px 10px 50px}
+    .card{padding:16px}
+    .port-display .num{font-size:42px}
+    .choice{padding:11px 12px;font-size:13.5px}
+    button{padding:10px 14px;font-size:13px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="index.html">&larr; Back to Game Hub</a>
+  <h1>📝 Port Test</h1>
+  <div class="sub">The port number is the question. Pick the choice with the correct Protocol, TCP/UDP, and Use &mdash; the other three are close lookalikes.</div>
+
+  <div id="app"></div>
+
+  <p style="text-align:center;color:var(--muted);font-size:12px;margin-top:14px">For educational purposes only &mdash; not affiliated with or endorsed by CompTIA.</p>
+</div>
+
+<script src="data.js"></script>
+<script>
+function shuffle(arr){
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]]=[a[j],a[i]];
+  }
+  return a;
+}
+function choiceText(d){ return `${d.protocol} — ${d.transport} — ${d.use}`; }
+
+function buildQuestions(n){
+  const chosen = shuffle(PORT_DATA).slice(0, n);
+  return chosen.map(entry => {
+    const others = PORT_DATA.filter(p => p.port !== entry.port);
+    const sameTransport = shuffle(others.filter(o => o.transport === entry.transport));
+    const rest = shuffle(others.filter(o => o.transport !== entry.transport));
+    const distractors = [...sameTransport, ...rest].slice(0, 3);
+    const optionEntries = shuffle([entry, ...distractors]);
+    return {
+      port: entry.port,
+      correctEntry: entry,
+      options: optionEntries,
+      correctIndex: optionEntries.findIndex(o => o.port === entry.port)
+    };
+  });
+}
+
+const STORAGE_KEY = "porttest_session_v1";
+const app = document.getElementById("app");
+let questions = [];
+let qCount = 15;
+let current = 0;
+let answers = [];
+
+function saveSession(){
+  localStorage.setItem(STORAGE_KEY, JSON.stringify({ v: 1, qCount, questions, answers, current }));
+}
+function loadSession(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(!raw) return null;
+    const s = JSON.parse(raw);
+    if(s && s.v === 1) return s;
+  }catch(e){}
+  return null;
+}
+function clearSession(){
+  localStorage.removeItem(STORAGE_KEY);
+}
+
+function renderSetup(){
+  const maxN = PORT_DATA.length;
+  const existing = loadSession();
+  app.innerHTML = `
+    ${existing ? `
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
+          <div style="font-size:14px">
+            <strong>Test in progress</strong> &mdash; question ${existing.current+1} of ${existing.questions.length},
+            ${existing.answers.filter(a=>a!==null).length} answered.
+          </div>
+          <div style="display:flex;gap:10px">
+            <button id="resumeBtn">Resume Test</button>
+            <button class="ghost" id="discardBtn">Discard</button>
+          </div>
+        </div>
+      </div>` : ``}
+    <div class="card howto">
+      <strong>How to play</strong>
+      <ol>
+        <li>Each question shows a single <strong>port number</strong>.</li>
+        <li>Choose the answer card that lists the correct Protocol, TCP/UDP, and Use for that port.</li>
+        <li>The other three choices are real ports too &mdash; read carefully, they're picked to look similar.</li>
+        <li>Your final score appears after the last question.</li>
+      </ol>
+    </div>
+    <div class="card">
+      <div class="controls" id="sizeControls">
+        <span style="color:var(--muted);font-size:13.5px;margin-right:4px">Questions:</span>
+        <button class="ghost size-btn" data-n="10">10</button>
+        <button class="ghost size-btn" data-n="15">15</button>
+        <button class="ghost size-btn" data-n="20">20</button>
+        <button class="ghost size-btn" data-n="${maxN}">All ${maxN}</button>
+      </div>
+      <div class="bottom-row">
+        <span style="color:var(--muted);font-size:13px">Currently set to <b id="countLabel">${qCount}</b> questions.</span>
+        <button id="startBtn">Start Test</button>
+      </div>
+    </div>
+  `;
+  document.querySelectorAll(".size-btn").forEach(b => {
+    b.classList.toggle("active", parseInt(b.dataset.n,10) === qCount);
+    b.addEventListener("click", () => {
+      qCount = parseInt(b.dataset.n, 10);
+      renderSetup();
+    });
+  });
+  document.getElementById("startBtn").addEventListener("click", startQuiz);
+  if(existing){
+    document.getElementById("resumeBtn").addEventListener("click", () => {
+      qCount = existing.qCount;
+      questions = existing.questions;
+      answers = existing.answers;
+      current = existing.current;
+      renderQuiz();
+    });
+    document.getElementById("discardBtn").addEventListener("click", () => {
+      clearSession();
+      renderSetup();
+    });
+  }
+}
+
+function startQuiz(){
+  clearSession();
+  questions = buildQuestions(qCount);
+  answers = questions.map(() => null);
+  current = 0;
+  renderQuiz();
+}
+
+function pauseAndSave(){
+  saveSession();
+  window.location.href = "index.html";
+}
+
+function renderQuiz(){
+  const total = questions.length;
+  const q = questions[current];
+  const answered = answers[current];
+  const pct = Math.round((current/total)*100);
+  const answeredCount = answers.filter(a => a !== null).length;
+
+  app.innerHTML = `
+    <div class="qmeta">
+      <span>Question ${current+1} of ${total}</span>
+      <span>${answeredCount} answered</span>
+    </div>
+    <div class="progress"><div class="bar" style="width:${pct}%"></div></div>
+    <div class="card">
+      <div class="port-display">
+        <div class="label">What uses port</div>
+        <div class="num">${q.port}</div>
+      </div>
+      <div class="choices" id="choicesWrap"></div>
+      <div id="feedbackWrap"></div>
+      <div class="bottom-row">
+        <button class="ghost" id="pauseBtn">Pause &amp; Save</button>
+        <div style="display:flex;gap:10px">
+          <button class="ghost" id="prevBtn" ${current===0?'disabled':''}>&#9664; Prev</button>
+          <button id="nextBtn" disabled>${current===total-1 ? 'See Score' : 'Next ▶'}</button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  const wrap = document.getElementById("choicesWrap");
+  q.options.forEach((opt, i) => {
+    const btn = document.createElement("button");
+    btn.className = "choice";
+    btn.innerHTML = `<strong>${String.fromCharCode(65+i)}.</strong> ${choiceText(opt)}`;
+    btn.addEventListener("click", () => {
+      if(answers[current] !== null) return;
+      answers[current] = i;
+      renderQuiz();
+    });
+    wrap.appendChild(btn);
+  });
+
+  if(answered !== null){
+    lockChoices(q, answered);
+    document.getElementById("nextBtn").disabled = false;
+  }
+
+  document.getElementById("prevBtn").addEventListener("click", () => {
+    current = Math.max(0, current-1);
+    renderQuiz();
+  });
+  document.getElementById("nextBtn").addEventListener("click", () => {
+    if(current === total-1){
+      renderResults();
+    } else {
+      current++;
+      renderQuiz();
+    }
+  });
+  document.getElementById("pauseBtn").addEventListener("click", pauseAndSave);
+}
+
+function lockChoices(q, answeredIdx){
+  const wrap = document.getElementById("choicesWrap");
+  const wasCorrect = answeredIdx === q.correctIndex;
+  Array.from(wrap.children).forEach((btn, i) => {
+    btn.classList.add("locked");
+    btn.disabled = true;
+    if(i === answeredIdx && i === q.correctIndex) btn.classList.add("selected-correct");
+    else if(i === answeredIdx) btn.classList.add("selected-wrong");
+    else if(i === q.correctIndex) btn.classList.add("reveal-correct");
+  });
+  const fb = document.getElementById("feedbackWrap");
+  if(wasCorrect){
+    fb.innerHTML = `<div class="feedback"><span class="tag good">Correct</span>Port ${q.port} is ${choiceText(q.correctEntry)}.</div>`;
+  } else {
+    fb.innerHTML = `<div class="feedback"><span class="tag bad">Not quite</span>You picked ${choiceText(q.options[answeredIdx])}, which is a different port.</div>
+      <div class="feedback"><span class="tag good">Correct answer</span>Port ${q.port} is ${choiceText(q.correctEntry)}.</div>`;
+  }
+}
+
+function renderResults(){
+  clearSession();
+  let correct = 0;
+  const missed = [];
+  questions.forEach((q, i) => {
+    if(answers[i] === q.correctIndex) correct++;
+    else missed.push({q, chosen: answers[i]});
+  });
+  const total = questions.length;
+  const score = Math.round((correct/total)*100);
+
+  app.innerHTML = `
+    <div class="card">
+      <div class="score-big">${score}<span style="font-size:22px;color:var(--muted)"> / 100</span></div>
+      <div class="score-sub">${correct} correct out of ${total}</div>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0">Review missed questions (${missed.length})</h3>
+      <div id="missedList">${missed.length===0 ? '<div class="feedback">Perfect score!</div>' : ''}</div>
+    </div>
+    <div class="bottom-row" style="justify-content:center">
+      <button id="retryBtn">Play Again</button>
+    </div>
+  `;
+  const ml = document.getElementById("missedList");
+  missed.forEach(({q, chosen}) => {
+    const div = document.createElement("div");
+    div.className = "feedback";
+    const yourAnswer = chosen === null ? "Not answered" : choiceText(q.options[chosen]);
+    div.innerHTML = `<strong style="color:var(--text)">Port ${q.port}</strong><br/>
+      <span class="tag bad">Your answer</span>${yourAnswer}<br/>
+      <span class="tag good">Correct answer</span>${choiceText(q.correctEntry)}`;
+    ml.appendChild(div);
+  });
+  document.getElementById("retryBtn").addEventListener("click", renderSetup);
+}
+
+renderSetup();
+</script>
+</body>
+</html>
