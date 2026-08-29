@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Port &amp; Protocol Game Hub</title>
+<style>
+  :root{
+    --navy:#031126;
+    --blue1:#0b2545;
+    --blue2:#13315c;
+    --blue3:#1d4e89;
+    --blue4:#2f6fb0;
+    --accent:#5aa9e6;
+    --text:#eaf2fb;
+    --muted:#b3c7df;
+    --line:rgba(255,255,255,0.12);
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    min-height:100vh;
+    font-family:"Segoe UI",Inter,Arial,sans-serif;
+    color:var(--text);
+    background:
+      radial-gradient(1200px 600px at 10% -10%, var(--blue4) 0%, transparent 60%),
+      radial-gradient(1000px 700px at 110% 10%, var(--blue3) 0%, transparent 55%),
+      linear-gradient(180deg, var(--navy) 0%, var(--blue1) 45%, var(--blue2) 100%);
+    padding:32px 20px 60px;
+  }
+  .wrap{max-width:1080px;margin:0 auto}
+  header{text-align:center;margin-bottom:36px}
+  header h1{
+    font-size:clamp(28px,4vw,42px);
+    margin:0 0 10px 0;
+    letter-spacing:.01em;
+  }
+  header p{color:var(--muted);font-size:15.5px;max-width:640px;margin:0 auto;line-height:1.6}
+  .badge{
+    display:inline-block;background:rgba(90,169,230,0.16);border:1px solid rgba(90,169,230,0.4);
+    color:#cfeaff;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+    padding:5px 14px;border-radius:999px;margin-bottom:16px;
+  }
+  .grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(240px,1fr));
+    gap:22px;
+  }
+  .tile{
+    position:relative;
+    border-radius:18px;
+    padding:26px 22px 22px;
+    text-decoration:none;
+    color:var(--text);
+    background:linear-gradient(160deg, var(--tile-a), var(--tile-b));
+    border:1px solid rgba(255,255,255,0.15);
+    box-shadow:0 14px 30px rgba(0,0,0,0.35);
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    min-height:200px;
+    transition:transform .18s ease, box-shadow .18s ease;
+    overflow:hidden;
+  }
+  .tile::after{
+    content:"";
+    position:absolute; inset:0;
+    background:radial-gradient(400px 200px at 100% 0%, rgba(255,255,255,0.10), transparent 60%);
+    pointer-events:none;
+  }
+  .tile:hover{transform:translateY(-6px);box-shadow:0 20px 40px rgba(0,0,0,0.45)}
+  .tile .icon{font-size:34px;line-height:1}
+  .tile h2{margin:0;font-size:20px}
+  .tile p{margin:0;font-size:13.5px;line-height:1.5;color:rgba(255,255,255,0.88);flex:1}
+  .tile .play{
+    align-self:flex-start;
+    font-size:13px;font-weight:800;letter-spacing:.03em;text-transform:uppercase;
+    background:rgba(0,0,0,0.22);
+    padding:8px 14px;border-radius:999px;
+    display:inline-flex;align-items:center;gap:6px;
+  }
+  .tile.red{--tile-a:#6d2019;--tile-b:#721d13}
+  .tile.orange{--tile-a:#52320b;--tile-b:#553107}
+  .tile.blue{--tile-a:#0f396e;--tile-b:#0c3975}
+  .tile.green{--tile-a:#0d422e;--tile-b:#0b422d}
+  .tile.purple{--tile-a:#482289;--tile-b:#3f1a7a}
+  footer{
+    text-align:center;margin-top:44px;color:var(--muted);font-size:12.5px;line-height:1.7;
+  }
+  footer a{color:var(--accent)}
+  /* THE EXAM PICKER. It sits above the games rather than beside them,
+     because it changes what every one of them contains — a control that
+     quietly rewrites five games should not look like a footnote. */
+  .exam-pick{
+    background:rgba(255,255,255,0.06);
+    border:1px solid rgba(90,169,230,0.45);
+    border-radius:16px;
+    padding:20px 22px;
+    margin-bottom:30px;
+  }
+  .exam-pick__row{display:flex;flex-wrap:wrap;align-items:center;gap:14px}
+  .exam-pick label{
+    font-size:12.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;
+    color:#cfe4fa;
+  }
+  .exam-pick select{
+    flex:1;min-width:260px;
+    background:#0b2545;color:#eaf2fb;
+    border:1px solid rgba(255,255,255,0.35);
+    border-radius:10px;padding:11px 13px;
+    font-family:inherit;font-size:15px;
+  }
+  .exam-pick__count{
+    font-size:13px;font-weight:800;color:#0b2545;background:#8fd0ff;
+    padding:7px 13px;border-radius:999px;white-space:nowrap;
+  }
+  .exam-pick__blurb{margin:13px 0 0;font-size:14px;line-height:1.6;color:#dbe9f8}
+  .exam-pick__list{
+    margin:12px 0 0;font-size:12.5px;line-height:1.9;color:#cfe4fa;
+    font-family:ui-monospace,Consolas,monospace;
+  }
+  .exam-pick__list b{color:#fff;font-weight:700}
+  .source-card{
+    margin-top:34px;background:rgba(255,255,255,0.04);border:1px solid var(--line);
+    border-radius:14px;padding:18px 20px;color:var(--muted);font-size:13px;line-height:1.6;
+  }
+  .source-card strong{color:var(--text)}
+  @media(max-width:480px){
+    body{padding:20px 12px 40px}
+    .tile{padding:20px 18px 18px;min-height:170px}
+    .tile .icon{font-size:28px}
+    .tile h2{font-size:18px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <span class="badge">CompTIA Ports &amp; Protocols</span>
+    <h1>Port &amp; Protocol Game Hub</h1>
+    <p>Five ways to drill ports until they're automatic. Pick the exam you're studying for and every game below narrows to just the ports that exam tests &mdash; so what you practice here is what you'll be asked.</p>
+  </header>
+
+  <div class="exam-pick">
+    <div class="exam-pick__row">
+      <label for="examSelect">I am studying for</label>
+      <select id="examSelect"></select>
+      <span class="exam-pick__count" id="examCount"></span>
+    </div>
+    <p class="exam-pick__blurb" id="examBlurb"></p>
+    <p class="exam-pick__list" id="examList"></p>
+  </div>
+
+  <div class="grid">
+    <a class="tile red" href="match.html">
+      <div class="icon">🧩</div>
+      <h2>Port Match</h2>
+      <p>Click a port number, then click the card with its correct Protocol / TCP-UDP / Use. Clear the whole board to win.</p>
+      <span class="play">Play &rarr;</span>
+    </a>
+
+    <a class="tile orange" href="memory.html">
+      <div class="icon">🃏</div>
+      <h2>Port Memory</h2>
+      <p>Classic concentration. Flip two face-down cards at a time and pair each port number with its protocol name.</p>
+      <span class="play">Play &rarr;</span>
+    </a>
+
+    <a class="tile blue" href="quiz.html">
+      <div class="icon">📝</div>
+      <h2>Port Test</h2>
+      <p>A port number is the question. Pick the correct Protocol / TCP-UDP / Use from four close-but-wrong lookalikes. Scored at the end.</p>
+      <span class="play">Play &rarr;</span>
+    </a>
+
+    <a class="tile green" href="blitz.html">
+      <div class="icon">⚡</div>
+      <h2>Port Blitz</h2>
+      <p>A speed round. A protocol flashes on screen &mdash; tap its port number before the clock runs out. How high can you score in 60 seconds?</p>
+      <span class="play">Play &rarr;</span>
+    </a>
+
+    <a class="tile purple" href="secure.html">
+      <div class="icon">🔒</div>
+      <h2>Secure Swap</h2>
+      <p>Match each insecure, legacy protocol with its encrypted replacement &mdash; the Security+ secure-vs-insecure pairs, drilled as a matching game.</p>
+      <span class="play">Play &rarr;</span>
+    </a>
+  </div>
+
+  <div class="source-card">
+    <strong>Every game uses the exam you pick above</strong>, and the choice is remembered
+    the next time you visit. Change it here once rather than in five places.
+    <strong>Overall</strong> is the intersection &mdash; only the ports that appear on
+    A+ Core 1, Network+, Security+ and CySA+ alike. A+ Core 2 has no ports objective of its
+    own, so its list is the ports its topics lean on, marked as supporting rather than tested.
+  </div>
+
+  <footer>
+    Cyber Warrior Program study tools &middot; built for CompTIA A+ Core 1 (220-1201) port &amp; protocol review.<br />
+    For educational purposes only &mdash; not affiliated with or endorsed by CompTIA.
+  </footer>
+</div>
+
+<script src="data.js"></script>
+<script>
+(function () {
+  var sel = document.getElementById("examSelect");
+  var count = document.getElementById("examCount");
+  var blurb = document.getElementById("examBlurb");
+  var list = document.getElementById("examList");
+
+  EXAMS.forEach(function (e) {
+    var o = document.createElement("option");
+    o.value = e.key; o.textContent = e.label;
+    sel.appendChild(o);
+  });
+
+  function paint() {
+    var key = sel.value;
+    var pool = portsFor(key);
+    var e = examByKey(key);
+    count.textContent = pool.length + " port" + (pool.length === 1 ? "" : "s");
+    blurb.textContent = e.blurb;
+    /* Show the actual ports. A student choosing an exam should be able to
+       see what they just signed up to learn, not a number. */
+    list.innerHTML = pool.map(function (p) {
+      return "<b>" + p.port + "</b> " + p.protocol;
+    }).join(" &nbsp;·&nbsp; ");
+  }
+
+  sel.value = getExam();
+  paint();
+  sel.addEventListener("change", function () { setExam(sel.value); paint(); });
+})();
+</script>
+</body>
+</html>
